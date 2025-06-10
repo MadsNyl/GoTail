@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+
 	"gotail/db"
 	"gotail/handlers"
 	"gotail/middleware"
+	"gotail/handlers/html"
 )
 
 func main() {
@@ -18,6 +20,12 @@ func main() {
 	// Get DB driver and connection string from env
 	driver := os.Getenv("DB_DRIVER") // e.g., "sqlite" or "postgres"
 	dsn := os.Getenv("DB_DSN")       // e.g., "logs.db" or Postgres URL
+	user := os.Getenv("UI_USERNAME") // Username for UI authentication
+  	pass := os.Getenv("UI_PASSWORD") // Password for UI authentication
+
+	if user == "" || pass == "" {
+		log.Fatal("UI_USER and UI_PASS must be set")
+	}
 
 	if driver == "" || dsn == "" {
 		log.Fatal("DB_DRIVER and DB_DSN must be set in .env")
@@ -40,7 +48,10 @@ func main() {
 
 	// Register route with API key protection
 	http.Handle("/log", middleware.RequireAPIKey(http.HandlerFunc(handler.HandleLog)))
-	http.Handle("/logs", middleware.RequireAPIKey(http.HandlerFunc(handler.HandleGetLogs)))
+
+	// Register HTML handler for logs page
+	htmlHandler := &html.HTMLHandler{Store: store}
+	http.Handle("/", middleware.BasicAuth(user, pass)(http.HandlerFunc(htmlHandler.HandleLogsPage)))
 
 	log.Println("Listening on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))

@@ -20,7 +20,8 @@ type LogStore interface {
 	Init() error
 	InsertLog(entry LogEntry) error
 	Close() error
-	GetRecentLogs(limit int) ([]LogEntry, error)
+	GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string) ([]LogEntry, int, error)
+	GetAttributeKeys() ([]string, error)
 }
 
 var ErrUnsupportedDriver = errors.New("unsupported driver")

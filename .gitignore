@@ -6,6 +6,7 @@
 *.dylib
 *.test
 *.out
+gotail
 
 # === Go workspace ===
 /bin/

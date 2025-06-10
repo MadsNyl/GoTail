@@ -44,13 +44,3 @@ func (h *LogHandler) HandleLog(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-func (h *LogHandler) HandleGetLogs(w http.ResponseWriter, r *http.Request) {
-	logs, err := h.Store.GetRecentLogs(100) // limit to 100 for now
-	if err != nil {
-		http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(logs)
-}

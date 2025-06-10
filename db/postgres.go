@@ -2,6 +2,8 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -69,43 +71,107 @@ func (s *PostgresStore) Close() error {
 	return s.db.Close()
 }
 
-func (s *PostgresStore) GetRecentLogs(limit int) ([]LogEntry, error) {
-	rows, err := s.db.Query(`
-		SELECT id, ts, severity_text, severity_number, body, trace_id, span_id
-		FROM logs
-		ORDER BY ts DESC
-		LIMIT $1`, limit)
+func (s *PostgresStore) GetLogsFiltered(
+	page int, limit int, severity string, attrKey string, attrValue string,
+) ([]LogEntry, int, error) {
+	offset := (page - 1) * limit
+
+	var (
+		whereClauses []string
+		args         []interface{}
+		argIndex     = 1
+	)
+
+	query := `
+		SELECT l.id, l.ts, l.severity_text, l.severity_number, l.body, l.trace_id, l.span_id
+		FROM logs l`
+
+	// Optional JOIN if filtering by attribute
+	if attrKey != "" && attrValue != "" {
+		query += `
+			JOIN log_attributes a ON a.log_id = l.id`
+		whereClauses = append(whereClauses, fmt.Sprintf("a.key = $%d AND a.value ILIKE $%d", argIndex, argIndex+1))
+		args = append(args, attrKey, "%"+attrValue+"%")
+		argIndex += 2
+	}
+
+	if severity != "" {
+		whereClauses = append(whereClauses, fmt.Sprintf("l.severity_text = $%d", argIndex))
+		args = append(args, severity)
+		argIndex++
+	}
+
+	// Combine WHERE clause
+	where := ""
+	if len(whereClauses) > 0 {
+		where = " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+	query += where + fmt.Sprintf(" ORDER BY l.ts DESC LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, limit, offset)
+
+	// Total count query
+	countQuery := `SELECT COUNT(DISTINCT l.id) FROM logs l`
+	if attrKey != "" && attrValue != "" {
+		countQuery += ` JOIN log_attributes a ON a.log_id = l.id`
+	}
+	if len(whereClauses) > 0 {
+		countQuery += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	var count int
+	if err := s.db.QueryRow(countQuery, args[:argIndex-1]...).Scan(&count); err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	var logs []LogEntry
 	for rows.Next() {
 		var entry LogEntry
-		if err := rows.Scan(&entry.ID, &entry.Timestamp, &entry.SeverityText,
-			&entry.SeverityNumber, &entry.Body, &entry.TraceID, &entry.SpanID); err != nil {
-			return nil, err
+		err := rows.Scan(&entry.ID, &entry.Timestamp, &entry.SeverityText,
+			&entry.SeverityNumber, &entry.Body, &entry.TraceID, &entry.SpanID)
+		if err != nil {
+			return nil, 0, err
 		}
 
-		// Load attributes
 		attrRows, err := s.db.Query(`SELECT key, value FROM log_attributes WHERE log_id = $1`, entry.ID)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		defer attrRows.Close()
 
-		entry.Attributes = map[string]string{}
+		entry.Attributes = make(map[string]string)
 		for attrRows.Next() {
-			var key, value string
-			if err := attrRows.Scan(&key, &value); err != nil {
-				return nil, err
+			var k, v string
+			if err := attrRows.Scan(&k, &v); err != nil {
+				return nil, 0, err
 			}
-			entry.Attributes[key] = value
+			entry.Attributes[k] = v
 		}
-
 		logs = append(logs, entry)
 	}
 
-	return logs, nil
+	return logs, count, nil
+}
+
+func (s *PostgresStore) GetAttributeKeys() ([]string, error) {
+	rows, err := s.db.Query(`SELECT DISTINCT key FROM log_attributes`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var keys []string
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+	return keys, nil
 }

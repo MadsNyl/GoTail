@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -70,41 +71,120 @@ func (s *SQLiteStore) Close() error {
 	return s.db.Close()
 }
 
-func (s *SQLiteStore) GetRecentLogs(limit int) ([]LogEntry, error) {
-	rows, err := s.db.Query(`
-		SELECT id, ts, severity_text, severity_number, body, trace_id, span_id
-		FROM logs
-		ORDER BY ts DESC
-		LIMIT ?`, limit)
+func (s *SQLiteStore) GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string) ([]LogEntry, int, error) {
+	offset := (page - 1) * limit
+
+	var (
+		whereClauses []string
+		args         []interface{}
+	)
+
+	query := `
+		SELECT DISTINCT l.id, l.ts, l.severity_text, l.severity_number, l.body, l.trace_id, l.span_id
+		FROM logs l`
+
+	// Add join if filtering on attribute
+	if attrKey != "" && attrValue != "" {
+		query += `
+			INNER JOIN log_attributes a ON a.log_id = l.id`
+		whereClauses = append(whereClauses, "a.key = ? AND a.value LIKE ?")
+		args = append(args, attrKey, "%"+attrValue+"%")
+	}
+
+	if severity != "" {
+		whereClauses = append(whereClauses, "l.severity_text = ?")
+		args = append(args, severity)
+	}
+
+	where := ""
+	if len(whereClauses) > 0 {
+		where = " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	query += where + " ORDER BY l.ts DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	// Count query
+	countQuery := `SELECT COUNT(DISTINCT l.id) FROM logs l`
+	if attrKey != "" && attrValue != "" {
+		countQuery += ` INNER JOIN log_attributes a ON a.log_id = l.id`
+	}
+	if len(whereClauses) > 0 {
+		countQuery += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	var count int
+	countArgs := args[:len(args)-2] // exclude limit and offset
+	if err := s.db.QueryRow(countQuery, countArgs...).Scan(&count); err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := s.db.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	var logs []LogEntry
 	for rows.Next() {
 		var entry LogEntry
-		if err := rows.Scan(&entry.ID, &entry.Timestamp, &entry.SeverityText,
-			&entry.SeverityNumber, &entry.Body, &entry.TraceID, &entry.SpanID); err != nil {
-			return nil, err
+		var traceID, spanID sql.NullString
+		
+		// Scan into sql.NullString for nullable columns
+		err := rows.Scan(&entry.ID, &entry.Timestamp, &entry.SeverityText,
+			&entry.SeverityNumber, &entry.Body, &traceID, &spanID)
+		if err != nil {
+			return nil, 0, err
 		}
 
-		// load attributes
+		// Convert sql.NullString to *string
+		if traceID.Valid {
+			entry.TraceID = traceID.String
+		}
+		if spanID.Valid {
+			entry.SpanID = spanID.String
+		}
+
 		attrRows, err := s.db.Query(`SELECT key, value FROM log_attributes WHERE log_id = ?`, entry.ID)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		defer attrRows.Close()
 
 		entry.Attributes = map[string]string{}
 		for attrRows.Next() {
-			var key, value string
-			_ = attrRows.Scan(&key, &value)
-			entry.Attributes[key] = value
+			var k, v string
+			if err := attrRows.Scan(&k, &v); err != nil {
+				return nil, 0, err
+			}
+			entry.Attributes[k] = v
 		}
 
 		logs = append(logs, entry)
 	}
-	return logs, nil
+
+	return logs, count, nil
 }
 
+
+func (s *SQLiteStore) GetAttributeKeys() ([]string, error) {
+    // Example implementation, adjust according to your schema
+    rows, err := s.db.Query("SELECT DISTINCT key FROM log_attributes")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var keys []string
+    for rows.Next() {
+        var key string
+        if err := rows.Scan(&key); err != nil {
+            return nil, err
+        }
+        keys = append(keys, key)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+    return keys, nil
+}

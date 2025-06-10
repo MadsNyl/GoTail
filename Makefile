@@ -4,6 +4,7 @@ API_IMAGE=gotail-api
 
 # SQLite (named Docker volume, not stored on host)
 SQLITE_VOLUME=gotail-sqlite-data
+SQLITE_DB_PATH=logs.db
 
 # PostgreSQL
 POSTGRES_VOLUME=gotail-pgdata:/var/lib/postgresql/data
@@ -17,6 +18,10 @@ POSTGRES_PASSWORD=secret
 # Build the Go API Docker image
 build:
 	docker build -t $(API_IMAGE) .
+
+# Build the Go API locally
+go:
+	go build -o gotail .
 
 # Run the API with SQLite (no local file, volume is managed by Docker)
 run-sqlite:
@@ -63,3 +68,11 @@ run:
 		--env-file .env \
 		--name $(APP_NAME)-sqlite \
 		$(API_IMAGE)
+
+build-logfactory: ## Build the log factory binary
+	@echo "Building log factory..."
+	@go build -o bin/logfactory ./cmd/factory
+
+generate-logs: build-logfactory ## Generate mock logs (use LOG_COUNT and DB_PATH env vars)
+	@echo "Generating 1000 logs in $(SQLITE_DB_PATH)..."
+	@./bin/logfactory -db=$(SQLITE_DB_PATH) -count=1000

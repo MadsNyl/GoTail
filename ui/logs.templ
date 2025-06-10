@@ -1,0 +1,102 @@
+package ui
+
+import (
+  "gotail/db"
+  "fmt"
+) 
+
+templ LogsView(data struct {
+	Logs     []db.LogEntry
+	Page     int
+	Limit    int
+	Total    int
+	Severity string
+  AttrKeys []string
+  AttrValue string
+  AttrKey string
+}) {
+  <!DOCTYPE html>
+  <html lang="en" class="bg-gray-50 text-gray-900">
+    <head>
+      <meta charset="UTF-8" />
+      <title>GoTail Logs</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="p-6">
+      <h1 class="text-2xl font-bold mb-4">GoTail Logs</h1>
+
+    <form method="GET" class="mb-4 flex flex-wrap items-end gap-4">
+      <!-- Severity filter -->
+      <select name="severity" class="…">
+        <option value="">All</option>
+        <option value="ERROR" selected?={data.Severity=="ERROR"}>ERROR</option>
+        <!-- more levels -->
+      </select>
+
+      <!-- Attribute key dropdown -->
+      <select name="attr_key" class="…">
+        <option value="">Any attribute</option>
+        for _, key := range data.AttrKeys {
+          <option value={key} selected?={data.AttrKey==key}>{key}</option>
+        }
+      </select>
+
+      <!-- Attribute value input -->
+      <input
+        type="text"
+        name="attr_value"
+        placeholder="Attribute value"
+        class="border p-2 rounded"
+        value={data.AttrValue}
+      />
+
+      <input type="hidden" name="page" value="1"/>
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Apply filters</button>
+    </form>
+
+      <table class="min-w-full bg-white shadow rounded overflow-hidden">
+        <thead class="bg-gray-100 text-left text-sm font-semibold">
+          <tr>
+            <th class="p-2">Time</th>
+            <th class="p-2">Level</th>
+            <th class="p-2">Message</th>
+            <th class="p-2">Attributes</th>
+          </tr>
+        </thead>
+        <tbody>
+          for _, item := range data.Logs {
+            <tr class="border-t">
+              <td class="p-2">{item.Timestamp.Format("2006-01-02 15:04:05")}</td>
+              <td class="p-2">{item.SeverityText}</td>
+              <td class="p-2">{item.Body}</td>
+              <td class="p-2">
+                for k, v := range item.Attributes{
+                  <div>
+                    <span class="text-gray-600">{k}</span>: <span>{v}</span>
+                  </div>
+                }   
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination controls -->
+      <div class="mt-4 flex gap-2 items-center">
+        if data.Page > 1 {
+          <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
+            href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page-1, data.Limit, data.Severity) }>
+            Previous
+          </a>
+        }
+        <span>Page { fmt.Sprintf("%d", data.Page) }</span>
+        if data.Page * data.Limit < data.Total {
+          <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
+            href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page+1, data.Limit, data.Severity) }>
+            Next
+          </a>
+        }
+      </div>
+    </body>
+  </html>
+}
