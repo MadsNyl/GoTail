@@ -1,12 +1,13 @@
 package ui
 
 import (
-  "gotail/db"
   "fmt"
+
+  "gotail/models"
 ) 
 
 templ LogsView(data struct {
-	Logs     []db.LogEntry
+	Logs     []models.LogEntry
 	Page     int
 	Limit    int
 	Total    int

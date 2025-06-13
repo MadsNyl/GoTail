@@ -2,26 +2,18 @@ package db
 
 import (
 	"errors"
-	"time"
-)
+	"gotail/models"
 
-type LogEntry struct {
-	ID             string            `json:"id"`
-	Timestamp      time.Time         `json:"timestamp"`
-	SeverityText   string            `json:"severity_text"`
-	SeverityNumber int               `json:"severity_number"`
-	Body           string            `json:"body"`
-	TraceID        string            `json:"trace_id"`
-	SpanID         string            `json:"span_id"`
-	Attributes     map[string]string `json:"attributes"`
-}
+	"gotail/db/sqlite"
+)
 
 type LogStore interface {
 	Init() error
-	InsertLog(entry LogEntry) error
+	InsertLog(entry models.LogEntry) error
 	Close() error
-	GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string) ([]LogEntry, int, error)
+	GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string) ([]models.LogEntry, int, error)
 	GetAttributeKeys() ([]string, error)
+	GetLatestLogs(limit int) ([]models.LogEntry, error)
 }
 
 var ErrUnsupportedDriver = errors.New("unsupported driver")
@@ -29,9 +21,7 @@ var ErrUnsupportedDriver = errors.New("unsupported driver")
 func New(driver string, dsn string) (LogStore, error) {
 	switch driver {
 	case "sqlite":
-		return NewSQLiteStore(dsn)
-	case "postgres":
-		return NewPostgresStore(dsn)
+		return sqlite.NewSQLiteStore(dsn)
 	default:
 		return nil, ErrUnsupportedDriver
 	}

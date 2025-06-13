@@ -132,24 +132,32 @@ func main() {
 func createTables(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS logs (
-		id TEXT PRIMARY KEY,
-		ts DATETIME NOT NULL,
-		severity_text TEXT NOT NULL,
-		severity_number INT,
-		body TEXT NOT NULL,
-		trace_id TEXT,
-		span_id TEXT
+			id               TEXT PRIMARY KEY,
+			timestamp        DATETIME NOT NULL,
+			observed_ts      DATETIME,
+			trace_id         TEXT,
+			span_id          TEXT,
+			trace_flags      INTEGER,
+			severity_text    TEXT NOT NULL,
+			severity_number  INT,
+			body             TEXT NOT NULL,
+			resource         TEXT,
+			instr_scope      TEXT,
+			created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 
 		CREATE TABLE IF NOT EXISTS log_attributes (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		log_id TEXT NOT NULL,
-		key TEXT NOT NULL,
-		value TEXT NOT NULL,
-		FOREIGN KEY (log_id) REFERENCES logs(id)
+			id          INTEGER PRIMARY KEY AUTOINCREMENT,
+			log_id      TEXT NOT NULL,
+			key         TEXT NOT NULL,
+			value       TEXT NOT NULL,
+			FOREIGN KEY (log_id) REFERENCES logs(id)
 		);
 
 		CREATE INDEX IF NOT EXISTS idx_attr_key_value ON log_attributes(key, value);
+		CREATE INDEX IF NOT EXISTS idx_log_ts ON logs(timestamp);
+		CREATE INDEX IF NOT EXISTS idx_log_severity ON logs(severity_text, severity_number);
+		CREATE INDEX IF NOT EXISTS idx_log_trace_span ON logs(trace_id, span_id);
 	`)
 
 	return err
@@ -163,7 +171,7 @@ func generateLogs(db *sql.DB, count int) error {
 	defer tx.Rollback()
 
 	logStmt, err := tx.Prepare(`
-		INSERT INTO logs (id, ts, severity_text, severity_number, body, trace_id, span_id)
+		INSERT INTO logs (id, timestamp, severity_text, severity_number, body, trace_id, span_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {

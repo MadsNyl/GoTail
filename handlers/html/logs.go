@@ -7,6 +7,7 @@ import (
 
 	"gotail/db"
 	"gotail/ui"
+    "gotail/models"
 )
 
 type HTMLHandler struct {
@@ -41,7 +42,7 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "text/html")
     ui.LogsView(struct {
-        Logs     []db.LogEntry
+        Logs     []models.LogEntry
         Page     int
         Limit    int
         Total    int

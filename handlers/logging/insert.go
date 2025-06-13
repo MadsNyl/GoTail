@@ -1,20 +1,21 @@
-package handlers
+package logging
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
 	"time"
-
 	"github.com/google/uuid"
+	
 	"gotail/db"
+	"gotail/models"
 )
 
 type LogHandler struct {
 	Store db.LogStore
 }
 
-func (h *LogHandler) HandleLog(w http.ResponseWriter, r *http.Request) {
+func (h *LogHandler) HandleLogInsert(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST supported", http.StatusMethodNotAllowed)
 		return
@@ -24,15 +25,14 @@ func (h *LogHandler) HandleLog(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid body", http.StatusBadRequest)
 		return
 	}
-	var logEntry db.LogEntry
+	var logEntry models.LogEntry
 	if err := json.Unmarshal(body, &logEntry); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	if logEntry.ID == "" {
-		logEntry.ID = uuid.NewString()
-	}
+	logEntry.ID = uuid.New().String()
+
 	if logEntry.Timestamp.IsZero() {
 		logEntry.Timestamp = time.Now().UTC()
 	}
