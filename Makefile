@@ -8,3 +8,7 @@ build-logfactory: ## Build the log factory binary
 generate-logs: build-logfactory ## Generate logs using the log factory
 	@echo "Generating 1000 logs in logs.db..."
 	@./bin/logfactory -db=logs.db -count=1000
+
+air-build:
+	@templ generate
+	@go build -o ./tmp/main.exe .

@@ -38,23 +38,15 @@ func main() {
 	}
 	defer store.Close()
 
-	// Create schema
-	if err := store.Init(); err != nil {
-		log.Fatal("DB schema creation failed:", err)
-	}
-
 	// Create log handler with store dependency
 	handler := &logging.LogHandler{Store: store}
 	// Create HTML handler with store dependency
 	htmlHandler := &html.HTMLHandler{Store: store}
 
-	// Route for fetching logs (JSON)
-	http.Handle("/logs", middleware.BasicAuth(user, pass)(http.HandlerFunc(handler.HandleGetLogs)))
-
 	// Route for submitting logs (POST)
 	http.Handle("/log", middleware.BasicAuth(user, pass)(http.HandlerFunc(handler.HandleLogInsert)))
 
-	// Route for HTML page (fallback)
+	// Route for HTML page
 	http.Handle("/", middleware.BasicAuth(user, pass)(http.HandlerFunc(htmlHandler.HandleLogsPage)))
 
 

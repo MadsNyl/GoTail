@@ -40,6 +40,12 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    totalLogs, err := h.Store.GetTotalLogs()
+    if err != nil {
+        http.Error(w, "Failed to fetch total logs", http.StatusInternalServerError)
+        return
+    }
+
     w.Header().Set("Content-Type", "text/html")
     ui.LogsView(struct {
         Logs     []models.LogEntry
@@ -50,6 +56,8 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 		AttrKeys []string
 		AttrValue	string
 		AttrKey	string
+        CurrentUrl string
+        TotalLogs int
     }{
         Logs:     logs,
         Page:     page,
@@ -59,6 +67,8 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 		AttrKeys: attrKeys,
 		AttrValue: attrValue,
 		AttrKey: attrKey,
+        CurrentUrl: r.URL.Path,
+        TotalLogs: totalLogs,
     }).Render(r.Context(), w)
 }
 

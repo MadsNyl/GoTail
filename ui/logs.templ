@@ -4,7 +4,13 @@ import (
   "fmt"
 
   "gotail/models"
+  "gotail/ui/components"
+  i "github.com/callsamu/templicons"
 ) 
+
+script onOpenDrawer(id string) {
+	document.getElementById(id).classList.toggle("w-64");
+}
 
 templ LogsView(data struct {
 	Logs     []models.LogEntry
@@ -15,88 +21,157 @@ templ LogsView(data struct {
   AttrKeys []string
   AttrValue string
   AttrKey string
+  CurrentUrl string
+  TotalLogs int
 }) {
   <!DOCTYPE html>
-  <html lang="en" class="bg-gray-50 text-gray-900">
+  <html lang="en" class="bg-gray-50/40 text-gray-900">
     <head>
       <meta charset="UTF-8" />
-      <title>GoTail Logs</title>
+      <title>GoTail</title>
       <script src="https://cdn.tailwindcss.com"></script>
     </head>
-    <body class="p-6">
-      <h1 class="text-2xl font-bold mb-4">GoTail Logs</h1>
+    <body>
+      @components.Sidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
 
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-4">
-      <!-- Severity filter -->
-      <select name="severity" class="…">
-        <option value="">All</option>
-        <option value="ERROR" selected?={data.Severity=="ERROR"}>ERROR</option>
-        <!-- more levels -->
-      </select>
+      <div class="ml-64 p-8 space-y-6">
+        <div class="space-y-2">
+          <h1 class="text-3xl font-bold">Log Entries</h1>
+          <p class="text-gray-500">
+            Browse and filter log entries from your application.
+          </p>
+        </div>
 
-      <!-- Attribute key dropdown -->
-      <select name="attr_key" class="…">
-        <option value="">Any attribute</option>
-        for _, key := range data.AttrKeys {
-          <option value={key} selected?={data.AttrKey==key}>{key}</option>
-        }
-      </select>
+        <div class="w-full p-6 rounded-lg shadow-sm border space-y-4 bg-white">
+          <div class="flex items-center space-x-2">
+            @i.Icon("mdi:search", i.Params().SetDimensions(24, 24))
+            <p class="text-2xl font-semibold">Filters</p>
+          </div>
+          <form method="GET" class="grid grid-cols-5 gap-4 items-end">
+            <!-- Severity filter -->
+            <div class="space-y-2">
+              <label for="severity" class="block text-sm font-medium">
+                Severity Level
+              </label>
+              <select
+                name="severity"
+                class="w-full border p-2 rounded-lg"
+              >
+                <option value="">All levels</option>
+                <option value="INFO" selected?={data.Severity=="INFO"}>INFO</option>
+                <option value="WARN" selected?={data.Severity=="WARN"}>WARN</option>
+                <option value="ERROR" selected?={data.Severity=="ERROR"}>ERROR</option>
+                <option value="DEBUG" selected?={data.Severity=="DEBUG"}>DEBUG</option>
+              </select>
+            </div>
 
-      <!-- Attribute value input -->
-      <input
-        type="text"
-        name="attr_value"
-        placeholder="Attribute value"
-        class="border p-2 rounded"
-        value={data.AttrValue}
-      />
+            <!-- Attribute key dropdown -->
+            <div class="space-y-2">
+              <label for="attr_key" class="block text-sm font-medium">
+                Attribute Key
+              </label>
+              <select
+                name="attr_key"
+                class="w-full border p-2 rounded-lg"
+              >
+                <option value="">
+                  Any attribute
+                </option>
+                for _, key := range data.AttrKeys {
+                  <option
+                    value={key}
+                    selected?={data.AttrKey==key}
+                  >
+                    {key}
+                  </option>
+                }
+              </select>
+            </div>
 
-      <input type="hidden" name="page" value="1"/>
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Apply filters</button>
-    </form>
+            <!-- Attribute value input -->
+            <div class="space-y-2">
+              <label for="attr_value" class="block text-sm font-medium">
+                Attribute Value
+              </label>
+              <input
+                type="text"
+                name="attr_value"
+                placeholder="Search by value..."
+                class="w-full border p-2 rounded-lg"
+                value={data.AttrValue}
+              />
+            </div>
 
-      <table class="min-w-full bg-white shadow rounded overflow-hidden">
-        <thead class="bg-gray-100 text-left text-sm font-semibold">
-          <tr>
-            <th class="p-2">Time</th>
-            <th class="p-2">Level</th>
-            <th class="p-2">Message</th>
-            <th class="p-2">Attributes</th>
-          </tr>
-        </thead>
-        <tbody>
-          for _, item := range data.Logs {
-            <tr class="border-t">
-              <td class="p-2">{item.Timestamp.Format("2006-01-02 15:04:05")}</td>
-              <td class="p-2">{item.SeverityText}</td>
-              <td class="p-2">{item.Body}</td>
-              <td class="p-2">
-                for k, v := range item.Attributes{
-                  <div>
-                    <span class="text-gray-600">{k}</span>: <span>{v}</span>
-                  </div>
-                }   
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+            <input type="hidden" name="page" value="1"/>
+            <button
+              type="submit"
+              class="bg-[#0f172a] border border-[#0f172a] text-[#f8fafc] h-[42px] px-4 py-2 rounded-lg"
+            >
+              Search
+            </button>
+            <button
+              type="reset"
+              class="bg-gray-300 border border-gray-300 text-gray-900 px-4 py-2 rounded-lg h-[42px]"
+              onclick="window.location.href='/'"
+            >
+              Reset
+            </button>
+          </form>
+        </div>
 
-      <!-- Pagination controls -->
-      <div class="mt-4 flex gap-2 items-center">
-        if data.Page > 1 {
-          <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
-            href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page-1, data.Limit, data.Severity) }>
-            Previous
-          </a>
-        }
-        <span>Page { fmt.Sprintf("%d", data.Page) }</span>
-        if data.Page * data.Limit < data.Total {
-          <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
-            href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page+1, data.Limit, data.Severity) }>
-            Next
-          </a>
-        }
+        <div class="w-full p-6 rounded-lg shadow-sm border space-y-4 bg-white">
+          <h1 class="text-xl font-semibold">
+            Log Entries ({data.TotalLogs} total) 
+          </h1>
+        </div>
+
+          <table class="min-w-full bg-white shadow rounded overflow-hidden">
+            <thead class="bg-gray-100 text-left text-sm font-semibold">
+              <tr>
+                <th class="p-2">Time</th>
+                <th class="p-2">Level</th>
+                <th class="p-2">Message</th>
+                <th class="p-2">Attributes</th>
+              </tr>
+            </thead>
+            <tbody>
+              for _, item := range data.Logs {
+                @components.Drawer(struct{ID string}{ID: fmt.Sprintf("log-%d", item.ID)})
+                <tr
+                  class="border-t cursor-pointer"
+                  onClick={onOpenDrawer(fmt.Sprintf("log-%d", item.ID))}
+                >
+                  <td class="p-2">{item.Timestamp.Format("2006-01-02 15:04:05")}</td>
+                  <td class="p-2">{item.SeverityText}</td>
+                  <td class="p-2">{item.Body}</td>
+                  <td class="p-2">
+                    for k, v := range item.Attributes{
+                      <div>
+                        <span class="text-gray-600">{k}</span>: <span>{fmt.Sprintf("%v", v)}</span>
+                      </div>
+                    }   
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <!-- Pagination controls -->
+          <div class="mt-4 flex gap-2 items-center">
+            if data.Page > 1 {
+              <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
+                href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page-1, data.Limit, data.Severity) }>
+                Previous
+              </a>
+            }
+            <span>Page { fmt.Sprintf("%d", data.Page) }</span>
+            if data.Page * data.Limit < data.Total {
+              <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
+                href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page+1, data.Limit, data.Severity) }>
+                Next
+              </a>
+            }
+          </div>
       </div>
     </body>
   </html>

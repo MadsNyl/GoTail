@@ -1,0 +1,22 @@
+package components
+
+script closeDrawer(id string) {
+    document.getElementById(id).classList.remove("w-64");
+    document.getElementById(id + "-backdrop").classList.remove("opacity-100");
+    document.getElementById(id + "-backdrop").classList.add("opacity-0");
+}
+
+templ Drawer(data struct {
+    ID string
+}) {
+    <div id={data.ID} class="fixed top-0 right-0 h-full w-0 bg-white shadow-lg overflow-auto transition-width duration-300 z-50">
+        <button
+            onClick={closeDrawer(data.ID)}
+            class="m-4 text-gray-600 hover:text-black"
+        >
+            &times;
+        </button>
+        <div id="drawer-content" class="p-4"></div>
+    </div>
+    <div id={data.ID + "-backdrop"} class="fixed inset-0 bg-black opacity-0 pointer-events-none transition-opacity duration-300"></div>
+}

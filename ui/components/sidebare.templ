@@ -1,0 +1,38 @@
+package components
+
+import i "github.com/callsamu/templicons"
+
+templ Sidebar(data struct {
+    CurrentUrl string
+}) {
+    <div class="h-screen fixed top-0 left-0 w-64 bg-white shadow-sm border-r">
+        <div class="space-y-1 py-6 px-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                GoTail
+            </h1>
+            <p class="text-sm text-gray-500">
+                Log Management System
+            </p>
+        </div>
+
+        <div class="w-full h-[1px] bg-gray-200 mb-6"></div>
+
+        <nav class="px-4">
+            <ul class="space-y-2">
+                <li>
+                    <a
+                        href="/"
+                        class={
+                            "flex space-x-2 items-center px-4 py-3 rounded-lg hover:bg-[#0f172a] hover:text-[#f8fafc] translate-all duration-150 font-medium",
+                            templ.KV("text-[#f8fafc] bg-[#0f172a]", data.CurrentUrl == "/")
+                        }
+                    >
+                        @i.Icon("mdi:home", i.Params().SetDimensions(24, 24))
+                        <span>Logs</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+}
