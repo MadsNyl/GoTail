@@ -31,6 +31,12 @@ func main() {
 		log.Fatal("DB_DRIVER and DB_DSN must be set in .env")
 	}
 
+	// Set busy timeout for SQLite if using SQLite
+	// This is important to avoid database lock issues
+	if dsn == "sqlite" {
+		dsn = dsn + "?_busy_timeout=5000"
+	}
+
 	// Initialize the correct DB store based on driver
 	store, err := db.New(driver, dsn)
 	if err != nil {

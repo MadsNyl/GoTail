@@ -1,13 +1,15 @@
 package sqlite
 
 import (
+	"encoding/json"
+	"fmt"
 	"gotail/models"
 )
 
 func (s *SQLiteStore) InsertLog(entry models.LogEntry) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	
+
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -44,9 +46,24 @@ func (s *SQLiteStore) InsertLog(entry models.LogEntry) error {
 
 	// Insert attributes
 	for k, v := range entry.Attributes {
+		var valStr string
+		switch v := v.(type) {
+		case string:
+			valStr = v
+		case float64, bool, int, int64:
+			valStr = fmt.Sprint(v)
+		default:
+			// Serialize complex types to JSON
+			jsonVal, err := json.Marshal(v)
+			if err != nil {
+				return fmt.Errorf("failed to serialize attribute %s: %w", k, err)
+			}
+			valStr = string(jsonVal)
+		}
+
 		_, err := tx.Exec(`
-            INSERT INTO attribute (log_id, key, value) VALUES (?, ?, ?)
-        `, entry.ID, k, v)
+			INSERT INTO attribute (log_id, key, value) VALUES (?, ?, ?)
+		`, entry.ID, k, valStr)
 		if err != nil {
 			return err
 		}
