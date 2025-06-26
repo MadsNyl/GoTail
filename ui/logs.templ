@@ -9,8 +9,34 @@ import (
 ) 
 
 script onOpenDrawer(id string) {
-	document.getElementById(id).classList.toggle("w-64");
+  document.getElementById(id).classList.toggle("w-96");
+  document.getElementById("body").classList.toggle("overflow-hidden");
+
+  const backdrop = document.getElementById(id + "-backdrop");
+  backdrop.classList.toggle("opacity-100");
+
+  if (backdrop.classList.contains("opacity-100")) {
+    backdrop.classList.remove("pointer-events-none");
+    backdrop.classList.add("pointer-events-auto");
+  } else {
+    backdrop.classList.remove("pointer-events-auto");
+    backdrop.classList.add("pointer-events-none");
+  }
 }
+
+func firstN(n int, attrs map[string]any) map[string]any {
+  result := make(map[string]any)
+  count := 0
+  for k, v := range attrs {
+    if count >= n {
+      break
+    }
+    result[k] = v
+    count++
+  }
+  return result
+}
+
 
 templ LogsView(data struct {
 	Logs     []models.LogEntry
@@ -25,14 +51,105 @@ templ LogsView(data struct {
   TotalLogs int
 }) {
   <!DOCTYPE html>
-  <html lang="en" class="bg-gray-50/40 text-gray-900">
+  <html lang="en" class="h-full bg-gray-50/40 text-gray-900">
     <head>
       <meta charset="UTF-8" />
       <title>GoTail</title>
       <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        html, body {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+      </style>
     </head>
-    <body>
+    <body id="body" class="h-full">
       @components.Sidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
+      
+      for _, item := range data.Logs {
+        @components.Drawer(struct{ID string}{ID: fmt.Sprintf("log-%d", item.ID)}){
+          <div class="space-y-8">
+            <div class="space-y-2">
+              <h2 class="text-2xl font-semibold">
+                Log Entry Details
+              </h2>
+              <p class="text-sm text-gray-500">
+                Detailed information for log entry ID {item.ID}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-4">
+              <div class="text-start space-y-2">
+                <h3 class="text-sm font-medium text-gray-500">
+                  Severity
+                </h3>
+                @components.Severity(struct{Severity string}{Severity: item.SeverityText})
+              </div>
+
+              <div class="text-start space-y-2">
+                <h3 class="text-sm font-medium text-gray-500">
+                  Timestamp
+                </h3>
+                <p class="text-sm">
+                  {item.Timestamp.Format("2006-01-02 15:04:05")}
+                </p>
+              </div>
+            </div>
+
+            <div class="text-start space-y-2">
+              <h3 class="text-sm font-medium text-gray-500">
+                Message
+              </h3>
+              <div class="p-2 bg-gray-100 rounded-lg w-full">
+                <p class="text-sm">
+                  {item.Body}
+                </p>
+              </div>
+            </div>
+
+            <div class="text-start space-y-2">
+              <h3 class="text-sm font-medium text-gray-500">
+                Service
+              </h3>
+              <p class="text-sm">
+                if item.ServiceName != nil && *item.ServiceName != "" {
+                  {*item.ServiceName}
+                } else {
+                  <span class="text-gray-400">No service name</span>
+                }
+              </p>
+            </div>
+
+            <div class="text-start space-y-2">
+              <h3 class="text-sm font-medium text-gray-500">
+                Host
+              </h3>
+              <p class="text-sm">
+                if item.HostName != nil && *item.HostName != "" {
+                  {*item.HostName}
+                } else {
+                  <span class="text-gray-400">No host name</span>
+                }
+              </p>
+            </div>
+
+            <div class="text-start space-y-2">
+              <h3 class="text-sm font-medium text-gray-500">
+                Attributes
+              </h3>
+              <div class="space-y-2">
+                for k, v := range item.Attributes {
+                  <div class="p-2 bg-gray-100 rounded-lg w-full flex items-center justify-between space-x-4">
+                    <span class="text-sm font-medium">{k}</span>
+                    <span class="text-sm text-end">{fmt.Sprintf("%v", v)}</span>
+                  </div>
+                } 
+              </div>    
+            </div>
+          </div>
+        }
+      }
 
       <div class="ml-64 p-8 space-y-6">
         <div class="space-y-2">
@@ -47,7 +164,7 @@ templ LogsView(data struct {
             @i.Icon("mdi:search", i.Params().SetDimensions(24, 24))
             <p class="text-2xl font-semibold">Filters</p>
           </div>
-          <form method="GET" class="grid grid-cols-5 gap-4 items-end">
+          <form method="GET" class="grid grid-cols-3 gap-x-4 gap-y-8 items-end">
             <!-- Severity filter -->
             <div class="space-y-2">
               <label for="severity" class="block text-sm font-medium">
@@ -59,7 +176,7 @@ templ LogsView(data struct {
               >
                 <option value="">All levels</option>
                 <option value="INFO" selected?={data.Severity=="INFO"}>INFO</option>
-                <option value="WARN" selected?={data.Severity=="WARN"}>WARN</option>
+                <option value="WARNING" selected?={data.Severity=="WARNING"}>WARNING</option>
                 <option value="ERROR" selected?={data.Severity=="ERROR"}>ERROR</option>
                 <option value="DEBUG" selected?={data.Severity=="DEBUG"}>DEBUG</option>
               </select>
@@ -102,7 +219,10 @@ templ LogsView(data struct {
               />
             </div>
 
-            <input type="hidden" name="page" value="1"/>
+            <div>
+              <input type="hidden" name="page" value="1"/>
+            </div>
+
             <button
               type="submit"
               class="bg-[#0f172a] border border-[#0f172a] text-[#f8fafc] h-[42px] px-4 py-2 rounded-lg"
@@ -125,12 +245,29 @@ templ LogsView(data struct {
           </h1>
         </div>
 
+        <div class="flex justify-end">
+          @components.Pagination(struct {
+            Page       int
+            Level      string
+            AttrKey    string
+            AttrValue  string
+            TotalPages int
+          }{
+            Page:       data.Page,
+            Level:      data.Severity,
+            AttrKey:    data.AttrKey,
+            AttrValue:  data.AttrValue,
+            TotalPages: (data.Total + data.Limit - 1) / data.Limit,
+          })
+        </div>
+
           <table class="min-w-full bg-white shadow rounded overflow-hidden">
             <thead class="bg-gray-100 text-left text-sm font-semibold">
               <tr>
                 <th class="p-2">Time</th>
                 <th class="p-2">Level</th>
-                <th class="p-2">Message</th>
+                <th class="p-2">Service</th>
+                <th class="p-2 w-[500px]">Message</th>
                 <th class="p-2">Attributes</th>
               </tr>
             </thead>
@@ -142,35 +279,49 @@ templ LogsView(data struct {
                   onClick={onOpenDrawer(fmt.Sprintf("log-%d", item.ID))}
                 >
                   <td class="p-2">{item.Timestamp.Format("2006-01-02 15:04:05")}</td>
-                  <td class="p-2">{item.SeverityText}</td>
+                  <td class="p-2">
+                    @components.Severity(struct{Severity string}{Severity: item.SeverityText})
+                  </td>
+                  <td class="2">
+                    if item.ServiceName != nil && *item.ServiceName != "" {
+                      <span>{*item.ServiceName}</span>
+                    } else {
+                      <span class="text-gray-400">N/A</span>
+                    }
+                  </td>
                   <td class="p-2">{item.Body}</td>
                   <td class="p-2">
-                    for k, v := range item.Attributes{
+                    for k, v := range firstN(3, item.Attributes) {
                       <div>
-                        <span class="text-gray-600">{k}</span>: <span>{fmt.Sprintf("%v", v)}</span>
+                        <span class="text-gray-600">{k}</span>:
+                        <span>{fmt.Sprintf("%v", v)}</span>
                       </div>
-                    }   
+                    }
+                    if len(item.Attributes) > 3 {
+                      <span class="flex rounded-lg bg-gray-100 py-1 px-2 text-xs block w-fit mt-2">
+                        + {len(item.Attributes) - 3} more
+                      </span>
+                    }
                   </td>
                 </tr>
               }
             </tbody>
           </table>
 
-          <!-- Pagination controls -->
-          <div class="mt-4 flex gap-2 items-center">
-            if data.Page > 1 {
-              <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
-                href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page-1, data.Limit, data.Severity) }>
-                Previous
-              </a>
-            }
-            <span>Page { fmt.Sprintf("%d", data.Page) }</span>
-            if data.Page * data.Limit < data.Total {
-              <a class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" 
-                href={ fmt.Sprintf("?page=%d&limit=%d&severity=%s", data.Page+1, data.Limit, data.Severity) }>
-                Next
-              </a>
-            }
+          <div class="mt-4 flex justify-end">
+            @components.Pagination(struct {
+              Page       int
+              Level      string
+              AttrKey    string
+              AttrValue  string
+              TotalPages int
+            }{
+              Page:       data.Page,
+              Level:      data.Severity,
+              AttrKey:    data.AttrKey,
+              AttrValue:  data.AttrValue,
+              TotalPages: (data.Total + data.Limit - 1) / data.Limit,
+            })
           </div>
       </div>
     </body>

@@ -1,0 +1,33 @@
+# Binaries
+main
+*.exe
+*.out
+/tmp/
+
+# Go cache
+*.test
+*.log
+
+# Vendor (unless you're using vendored modules)
+vendor/
+
+# Git
+.git
+.gitignore
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test data
+coverage.out
+
+# Docker-related
+Dockerfile
+docker-compose.yml
+.dockerignore

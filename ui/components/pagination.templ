@@ -1,0 +1,88 @@
+package components
+
+import (
+    "fmt"
+)
+
+templ Pagination(data struct {
+    Page        int
+    Level       string
+    AttrKey     string
+    AttrValue   string
+    TotalPages  int
+}) {
+    <div class="inline-flex items-center gap-1 text-sm">
+        <!-- Previous -->
+        if data.Page > 1 {
+            <a href={fmt.Sprintf("?page=%d&level=%s&attr_key=%s&attr_value=%s", data.Page-1, data.Level, data.AttrKey, data.AttrValue)}
+            class="flex items-center gap-1 px-3 py-2 text-gray-500 bg-white border rounded hover:bg-gray-100">
+            ← Previous
+            </a>
+        } else {
+            <p class="flex items-center gap-1 px-3 py-2 text-gray-500 bg-white border rounded bg-gray-100">
+            ← Previous
+            </p>
+        }
+
+        <!-- First page -->
+        <a href={fmt.Sprintf("?page=1&level=%s&attr_key=%s&attr_value=%s", data.Level, data.AttrKey, data.AttrValue)}
+            class={
+            "px-3 py-2 border rounded",
+            templ.KV("bg-gray-900 text-white", data.Page == 1),
+            templ.KV("bg-white text-gray-900 hover:bg-gray-100", data.Page != 1)
+            }>
+            1
+        </a>
+
+        <!-- Ellipsis after first page -->
+        if data.Page > 4 {
+            <span class="px-3 py-2 text-gray-400">…</span>
+        }
+
+        <!-- Pages around current page -->
+        for i := max(2, data.Page-1); i <= min(data.TotalPages-1, data.Page+1); i++ {
+            <a href={fmt.Sprintf("?page=%d&level=%s&attr_key=%s&attr_value=%s", i, data.Level, data.AttrKey, data.AttrValue)}
+            class={
+                "px-3 py-2 border rounded",
+                templ.KV("bg-gray-900 text-white", i == data.Page),
+                templ.KV("bg-white text-gray-900 hover:bg-gray-100", i != data.Page)
+            }>
+                {i}
+            </a>
+        }
+
+        <!-- Ellipsis before last page -->
+        if data.Page < data.TotalPages-3 {
+            <span class="px-3 py-2 text-gray-400">…</span>
+        }
+
+        <!-- Last page (only if more than 1 page) -->
+        if data.TotalPages > 1 {
+            <a 
+                href={fmt.Sprintf("?page=%d&level=%s&attr_key=%s&attr_value=%s", data.TotalPages, data.Level, data.AttrKey, data.AttrValue)}
+                class={
+                    "px-3 py-2 border rounded",
+                    templ.KV("bg-gray-900 text-white", data.TotalPages == data.Page),
+                    templ.KV("bg-white text-gray-900 hover:bg-gray-100", data.TotalPages != data.Page)
+                }
+            >
+                {data.TotalPages}
+            </a>
+        }
+
+        <!-- Next -->
+        if data.Page < data.TotalPages {
+            <a
+                href={fmt.Sprintf("?page=%d&level=%s&attr_key=%s&attr_value=%s", data.Page+1, data.Level, data.AttrKey, data.AttrValue)
+                }
+                class="flex items-center gap-1 px-3 py-2 text-gray-500 bg-white border rounded hover:bg-gray-100">
+                Next →
+            </a>
+        } else {
+            <p
+                class="flex items-center gap-1 px-3 py-2 text-gray-500 bg-white border rounded bg-gray-100">
+                Next →
+            </p>
+        }
+    </div>
+}

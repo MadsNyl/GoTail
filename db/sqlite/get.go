@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"strings"
+	"time"
 
 	"gotail/models"
 )
@@ -89,6 +90,13 @@ func (s *SQLiteStore) GetLogsFiltered(
 		if err != nil {
 			return nil, 0, err
 		}
+		loc, err := time.LoadLocation("Europe/Oslo")
+		if err != nil {
+			// fallback
+			loc = time.FixedZone("CET", 1*60*60) // backup zone
+		}
+
+		entry.Timestamp = entry.Timestamp.In(loc)
 
 		attrRows, err := s.db.Query(`SELECT key, value FROM attribute WHERE log_id = ?`, entry.ID)
 		if err != nil {

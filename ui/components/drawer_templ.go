@@ -10,13 +10,19 @@ import templruntime "github.com/a-h/templ/runtime"
 
 func closeDrawer(id string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_closeDrawer_3b92`,
-		Function: `function __templ_closeDrawer_3b92(id){document.getElementById(id).classList.remove("w-64");
-    document.getElementById(id + "-backdrop").classList.remove("opacity-100");
-    document.getElementById(id + "-backdrop").classList.add("opacity-0");
+		Name: `__templ_closeDrawer_7744`,
+		Function: `function __templ_closeDrawer_7744(id){document.getElementById(id).classList.remove("w-96");
+
+    const backdrop = document.getElementById(id + "-backdrop");
+    backdrop.classList.remove("opacity-100");
+    backdrop.classList.add("opacity-0");
+    backdrop.classList.remove("pointer-events-auto");
+    backdrop.classList.add("pointer-events-none");
+
+    document.getElementById("body").classList.remove("overflow-hidden");
 }`,
-		Call:       templ.SafeScript(`__templ_closeDrawer_3b92`, id),
-		CallInline: templ.SafeScriptInline(`__templ_closeDrawer_3b92`, id),
+		Call:       templ.SafeScript(`__templ_closeDrawer_7744`, id),
+		CallInline: templ.SafeScriptInline(`__templ_closeDrawer_7744`, id),
 	}
 }
 
@@ -50,13 +56,13 @@ func Drawer(data struct {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(data.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 12, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 19, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"fixed top-0 right-0 h-full w-0 bg-white shadow-lg overflow-auto transition-width duration-300 z-50\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"h-screen fixed top-0 right-0 w-0 bg-white shadow-lg overflow-auto transition-width duration-300 z-50\"><div class=\"relative h-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -73,20 +79,45 @@ func Drawer(data struct {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"m-4 text-gray-600 hover:text-black\">&times;</button><div id=\"drawer-content\" class=\"p-4\"></div></div><div id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"absolute top-2 right-2 text-gray-600 hover:text-black\">&times;</button><div id=\"drawer-content\" class=\"p-4\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ_7745c5c3_Var1.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, closeDrawer(data.ID))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.ID + "-backdrop")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 21, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 35, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" class=\"fixed inset-0 bg-black opacity-0 pointer-events-none transition-opacity duration-300\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" class=\"h-screen fixed inset-0 bg-black/35 opacity-0 pointer-events-none transition-opacity duration-300 z-40\" onClick=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 templ.ComponentScript = closeDrawer(data.ID)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5.Call)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
