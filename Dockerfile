@@ -26,6 +26,9 @@ COPY --from=builder /go/bin/goose /usr/local/bin/
 
 EXPOSE 8080
 
+# Copy migration files into the image
+COPY migrations/ /migrations
+
 CMD ["sh", "-c", "\
     goose -v up && \
     exec ./main \
