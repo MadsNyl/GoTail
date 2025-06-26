@@ -3,10 +3,12 @@ package logging
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"time"
+
 	"github.com/google/uuid"
-	
+
 	"gotail/db"
 	"gotail/models"
 )
@@ -39,6 +41,7 @@ func (h *LogHandler) HandleLogInsert(w http.ResponseWriter, r *http.Request) {
 
 	err = h.Store.InsertLog(logEntry)
 	if err != nil {
+		log.Printf("Failed to insert log: %v", err)
 		http.Error(w, "Failed to insert log", http.StatusInternalServerError)
 		return
 	}
