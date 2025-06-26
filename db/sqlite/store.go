@@ -2,11 +2,14 @@ package sqlite
 
 import (
 	"database/sql"
+	"sync"
+
 	_ "modernc.org/sqlite"
 )
 
 type SQLiteStore struct {
 	db *sql.DB
+	mutex sync.Mutex
 }
 
 func NewSQLiteStore(dsn string) (*SQLiteStore, error) {

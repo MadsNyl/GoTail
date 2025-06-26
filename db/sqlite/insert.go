@@ -5,6 +5,9 @@ import (
 )
 
 func (s *SQLiteStore) InsertLog(entry models.LogEntry) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
