@@ -86,7 +86,7 @@ func LogsView(data struct {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"w-full h-full bg-gray-50/40 text-gray-900\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>GoTail</title><script src=\"https://cdn.tailwindcss.com\"></script><style>\r\n        html, body {\r\n          height: 100%;\r\n          margin: 0;\r\n          padding: 0;\r\n        }\r\n      </style></head><body id=\"body\" class=\"w-full h-full\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"w-full h-full bg-gray-50/40 text-gray-900\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>GoTail - Logs</title><script src=\"https://cdn.tailwindcss.com\"></script><style>\r\n        html, body {\r\n          height: 100%;\r\n          margin: 0;\r\n          padding: 0;\r\n        }\r\n      </style></head><body id=\"body\" class=\"w-full h-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

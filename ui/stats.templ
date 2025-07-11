@@ -1,0 +1,87 @@
+package ui
+
+import (
+    "time"
+    "fmt"
+
+    i "github.com/callsamu/templicons"
+
+    "gotail/ui/components"
+)
+
+templ StatsView (data struct {
+    Year            int
+    Month           int
+    TotalLogs       int
+    SeverityCounts  map[string]int
+    DailyCounts     map[int]int
+    ServiceCounts   map[string]int
+    AttributeCounts map[string]int
+    CurrentUrl   	string
+    PrevMonth       int
+    PrevYear        int
+    NextMonth       int
+    NextYear        int
+}) {
+    <!DOCTYPE html>
+    <html lang="en" class="w-full h-full bg-gray-50/40 text-gray-900">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>GoTail - Stats</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+                html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                }
+            </style>
+        </head>
+        <body
+            id="body"
+            class="w-full h-full"
+        >
+            @components.Sidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
+
+            <div class="lg:ml-64 px-2 py-6 lg:p-8 space-y-6">
+                <div class="flex items-start justify-between space-x-8">
+                    <div class="space-y-2">
+                        <h1 class="text-2xl lg:text-3xl font-bold">
+                            Statistics Dashboard
+                        </h1>
+                        <p class="text-sm lg:text-md text-gray-500">
+                            View statistics about your logs, including total counts, severity breakdowns, and more.
+                        </p>
+                    </div>
+
+                    @components.MobileSidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
+                </div>
+
+                <div class="flex items-center justify-center space-x-4 mt-4">
+                    <!-- Previous Month -->
+                    <a
+                        href={"/stats?year=" + fmt.Sprintf("%d", data.PrevYear) + "&month=" + fmt.Sprintf("%d", data.PrevMonth)}
+                        class="p-2 rounded-full hover:bg-gray-100"
+                    >
+                        @i.Icon("mdi:chevron-left", i.Params().SetDimensions(24, 24))
+                    </a>
+
+                    <!-- Current Month/Year -->
+                    <div class="text-lg font-semibold">
+                        {time.Month(data.Month).String()} {data.Year}
+                    </div>
+
+                    <!-- Next Month -->
+                    <a
+                        href={"/stats?year=" + fmt.Sprintf("%d", data.NextYear) + "&month=" + fmt.Sprintf("%d", data.NextMonth)}
+                        class="p-2 rounded-full hover:bg-gray-100"
+                    >
+                        @i.Icon("mdi:chevron-right", i.Params().SetDimensions(24, 24))
+                    </a>
+                </div>
+
+            </div>
+        </body>
+    </html>   
+}

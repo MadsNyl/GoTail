@@ -31,6 +31,19 @@ templ Sidebar(data struct {
                         <span>Logs</span>
                     </a>
                 </li>
+
+                <li>
+                    <a
+                        href="/stats"
+                        class={
+                            "flex space-x-2 items-center px-4 py-3 rounded-lg hover:bg-[#0f172a] hover:text-[#f8fafc] translate-all duration-150 font-medium",
+                            templ.KV("text-[#f8fafc] bg-[#0f172a]", data.CurrentUrl == "/stats")
+                        }
+                    >
+                        @i.Icon("mdi:chart-bar", i.Params().SetDimensions(24, 24))
+                        <span>Stats</span>
+                    </a>
+                </li>
             </ul>
         </nav>
 

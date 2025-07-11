@@ -1,10 +1,9 @@
 package sqlite
 
 import (
+	"gotail/models"
 	"strings"
 	"time"
-
-	"gotail/models"
 )
 
 func (s *SQLiteStore) GetLogsFiltered(
