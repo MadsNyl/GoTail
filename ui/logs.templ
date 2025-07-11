@@ -50,6 +50,8 @@ templ LogsView(data struct {
   AttrKey string
   CurrentUrl string
   TotalLogs int
+  Services []string
+  Service string
 }) {
   <!DOCTYPE html>
   <html lang="en" class="w-full h-full bg-gray-50/40 text-gray-900">
@@ -170,7 +172,7 @@ templ LogsView(data struct {
             @i.Icon("mdi:search", i.Params().SetDimensions(24, 24))
             <p class="text-2xl font-semibold">Filters</p>
           </div>
-          <form method="GET" class="grid lg:grid-cols-3 lg:gap-x-4 gap-y-4 lg:gap-y-8 lg:items-end">
+          <form method="GET" class="grid lg:grid-cols-2 lg:gap-x-4 gap-y-4 lg:gap-y-8 lg:items-end">
             <!-- Severity filter -->
             <div class="space-y-2">
               <label for="severity" class="block text-sm font-medium">
@@ -185,6 +187,29 @@ templ LogsView(data struct {
                 <option value="WARNING" selected?={data.Severity=="WARNING"}>WARNING</option>
                 <option value="ERROR" selected?={data.Severity=="ERROR"}>ERROR</option>
                 <option value="DEBUG" selected?={data.Severity=="DEBUG"}>DEBUG</option>
+              </select>
+            </div>
+
+            <!-- Service name dropdown -->
+            <div class="space-y-2">
+              <label for="service" class="block text-sm font-medium">
+                Service Name
+              </label>
+              <select
+                name="service"
+                class="w-full border p-2 rounded-lg"
+              >
+                <option value="">
+                  Any service
+                </option>
+                for _, service := range data.Services {
+                  <option
+                    value={service}
+                    selected?={data.Service==service}
+                  >
+                    {service}
+                  </option>
+                }
               </select>
             </div>
 
@@ -225,9 +250,7 @@ templ LogsView(data struct {
               />
             </div>
 
-            <div>
-              <input type="hidden" name="page" value="1"/>
-            </div>
+            <input type="hidden" name="page" value="1"/>
 
             <button
               type="submit"

@@ -13,6 +13,7 @@ func (s *SQLiteStore) GetLogsFiltered(
 	severity string,
 	attrKey string,
 	attrValue string,
+	service string,
 ) ([]models.LogEntry, int, error) {
 	offset := (page - 1) * limit
 
@@ -36,6 +37,11 @@ func (s *SQLiteStore) GetLogsFiltered(
 	if severity != "" {
 		whereClauses = append(whereClauses, "l.severity_text = ?")
 		args = append(args, severity)
+	}
+
+	if service != "" {
+		whereClauses = append(whereClauses, "l.service_name = ?")
+		args = append(args, service)
 	}
 
 	if len(whereClauses) > 0 {
@@ -155,4 +161,25 @@ func (s *SQLiteStore) GetTotalLogs() (int, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func (s *SQLiteStore) GetServices() ([]string, error) {
+	rows, err := s.db.Query("SELECT DISTINCT service_name FROM log")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	services := []string{}
+	for rows.Next() {
+		var service string
+		if err := rows.Scan(&service); err != nil {
+			return nil, err
+		}
+		services = append(services, service)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return services, nil
 }

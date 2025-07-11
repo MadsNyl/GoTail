@@ -25,8 +25,9 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
     severity := q.Get("severity")
 	attrKey := q.Get("attr_key")
 	attrValue := q.Get("attr_value")
+    service := q.Get("service")
 
-    logs, total, err := h.Store.GetLogsFiltered(page, limit, severity, attrKey, attrValue)
+    logs, total, err := h.Store.GetLogsFiltered(page, limit, severity, attrKey, attrValue, service)
     if err != nil {
         // Log the error for debugging purposes
         log.Printf("Error fetching logs: %v", err)
@@ -46,6 +47,12 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    services, err := h.Store.GetServices()
+    if err != nil {
+        http.Error(w, "Failed to fetch services", http.StatusInternalServerError)
+        return
+    }
+
     w.Header().Set("Content-Type", "text/html")
     ui.LogsView(struct {
         Logs     []models.LogEntry
@@ -58,6 +65,8 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 		AttrKey	string
         CurrentUrl string
         TotalLogs int
+        Services []string
+        Service string
     }{
         Logs:     logs,
         Page:     page,
@@ -69,6 +78,8 @@ func (h *HTMLHandler) HandleLogsPage(w http.ResponseWriter, r *http.Request) {
 		AttrKey: attrKey,
         CurrentUrl: r.URL.Path,
         TotalLogs: totalLogs,
+        Services: services,
+        Service: service,
     }).Render(r.Context(), w)
 }
 

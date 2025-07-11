@@ -10,9 +10,10 @@ import (
 type LogStore interface {
 	Close() error
 	InsertLog(entry models.LogEntry) error
-	GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string) ([]models.LogEntry, int, error)
+	GetLogsFiltered(page int, limit int, severity string, attrKey string, attrValue string, service string) ([]models.LogEntry, int, error)
 	GetAttributeKeys() ([]string, error)
 	GetTotalLogs() (int, error)
+	GetServices() ([]string, error)
 }
 
 var ErrUnsupportedDriver = errors.New("unsupported driver")
