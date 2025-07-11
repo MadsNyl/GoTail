@@ -10,8 +10,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 func closeDrawer(id string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_closeDrawer_7744`,
-		Function: `function __templ_closeDrawer_7744(id){document.getElementById(id).classList.remove("w-96");
+		Name: `__templ_closeDrawer_d1e0`,
+		Function: `function __templ_closeDrawer_d1e0(id){document.getElementById(id).classList.remove("lg:w-96");
+    document.getElementById(id).classList.remove("w-72");
 
     const backdrop = document.getElementById(id + "-backdrop");
     backdrop.classList.remove("opacity-100");
@@ -21,8 +22,8 @@ func closeDrawer(id string) templ.ComponentScript {
 
     document.getElementById("body").classList.remove("overflow-hidden");
 }`,
-		Call:       templ.SafeScript(`__templ_closeDrawer_7744`, id),
-		CallInline: templ.SafeScriptInline(`__templ_closeDrawer_7744`, id),
+		Call:       templ.SafeScript(`__templ_closeDrawer_d1e0`, id),
+		CallInline: templ.SafeScriptInline(`__templ_closeDrawer_d1e0`, id),
 	}
 }
 
@@ -56,7 +57,7 @@ func Drawer(data struct {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(data.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 19, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 20, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -102,7 +103,7 @@ func Drawer(data struct {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.ID + "-backdrop")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 35, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/drawer.templ`, Line: 36, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {

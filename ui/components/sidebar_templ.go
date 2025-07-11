@@ -33,7 +33,7 @@ func Sidebar(data struct {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"h-screen fixed top-0 left-0 w-64 bg-white shadow-sm border-r\"><div class=\"space-y-1 py-6 px-6\"><h1 class=\"text-2xl font-bold text-gray-800\">GoTail</h1><p class=\"text-sm text-gray-500\">Log Management System</p></div><div class=\"w-full h-[1px] bg-gray-200 mb-6\"></div><nav class=\"px-4\"><ul class=\"space-y-2\"><li>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"hidden h-screen lg:block lg:fixed top-0 left-0 lg:w-64 bg-white shadow-sm border-r\"><div class=\"space-y-1 py-6 px-6\"><h1 class=\"text-2xl font-bold text-gray-800\">GoTail</h1><p class=\"text-sm text-gray-500\">Log Management System</p></div><div class=\"w-full h-[1px] bg-gray-200 mb-6\"></div><nav class=\"px-4\"><ul class=\"space-y-2\"><li>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -51,7 +51,7 @@ func Sidebar(data struct {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var2).String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/sidebare.templ`, Line: 1, Col: 0}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/sidebar.templ`, Line: 1, Col: 0}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
