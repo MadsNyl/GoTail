@@ -1,0 +1,57 @@
+package components
+
+import i "github.com/callsamu/templicons"
+
+script onOpenDrawer(id string) {
+    document.getElementById(id).classList.toggle("w-72");
+
+    document.getElementById("body").classList.toggle("overflow-hidden");
+
+    const backdrop = document.getElementById(id + "-backdrop");
+    backdrop.classList.toggle("opacity-100");
+    backdrop.classList.toggle("opacity-0");
+    backdrop.classList.toggle("pointer-events-auto");
+    backdrop.classList.toggle("pointer-events-none");
+}
+
+templ MobileSidebar(data struct {
+    CurrentUrl string
+}) {
+    <div class="lg:hidden">
+        <button
+            onClick={onOpenDrawer("mobile-sidebar")}
+        >
+            @i.Icon("mdi:menu", i.Params().SetDimensions(24, 24))
+        </button>
+
+        @Drawer(struct{ID string}{ID: "mobile-sidebar"}){
+            <div class="space-y-8">
+                <div class="space-y-2">
+                    <h1 class="text-xl font-bold text-gray-800">
+                        GoTail
+                    </h1>
+                    <p class="text-sm text-gray-500">
+                        Log Management System
+                    </p>
+                </div>
+
+                <nav>
+                    <ul class="space-y-2">
+                        <li>
+                            <a
+                                href="/"
+                                class={
+                                    "flex space-x-2 items-center px-4 py-3 rounded-lg hover:bg-[#0f172a] hover:text-[#f8fafc] translate-all duration-150 font-medium",
+                                    templ.KV("text-[#f8fafc] bg-[#0f172a]", data.CurrentUrl == "/")
+                                }
+                            >
+                                @i.Icon("mdi:home", i.Params().SetDimensions(24, 24))
+                                <span>Logs</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+}

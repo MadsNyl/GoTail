@@ -1,7 +1,8 @@
 package components
 
 script closeDrawer(id string) {
-    document.getElementById(id).classList.remove("w-96");
+    document.getElementById(id).classList.remove("lg:w-96");
+    document.getElementById(id).classList.remove("w-72");
 
     const backdrop = document.getElementById(id + "-backdrop");
     backdrop.classList.remove("opacity-100");
