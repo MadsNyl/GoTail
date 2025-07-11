@@ -8,13 +8,18 @@ import (
 func (s *SQLiteStore) CountLogsByMonth(year int, month int) (int, error) {
 	datePrefix := fmt.Sprintf("%04d-%02d", year, month)
 	var count int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM log WHERE strftime('%Y-%m', timestamp) = ?", datePrefix).Scan(&count)
+	err := s.db.QueryRow("SELECT COUNT(*) FROM log WHERE timestamp LIKE ?", datePrefix+"%").Scan(&count)
 	return count, err
 }
 
 func (s *SQLiteStore) CountLogsBySeverity(year int, month int) (map[string]int, error) {
     datePrefix := fmt.Sprintf("%04d-%02d", year, month)
-    rows, err := s.db.Query("SELECT severity_text, COUNT(*) FROM log WHERE strftime('%Y-%m', timestamp) = ? GROUP BY severity_text", datePrefix)
+
+    rows, err := s.db.Query(`
+        SELECT severity_text, COUNT(*) 
+        FROM log 
+        WHERE timestamp LIKE ? 
+        GROUP BY severity_text`, datePrefix+"%")
     if err != nil {
         return nil, err
     }
@@ -35,7 +40,12 @@ func (s *SQLiteStore) CountLogsBySeverity(year int, month int) (map[string]int, 
 
 func (s *SQLiteStore) CountLogsPerDay(year int, month int) (map[int]int, error) {
     datePrefix := fmt.Sprintf("%04d-%02d", year, month)
-    rows, err := s.db.Query("SELECT strftime('%d', timestamp) AS day, COUNT(*) FROM log WHERE strftime('%Y-%m', timestamp) = ? GROUP BY day ORDER BY day", datePrefix)
+    rows, err := s.db.Query(`
+        SELECT substr(timestamp, 9, 2) AS day, COUNT(*) 
+        FROM log 
+        WHERE timestamp LIKE ? 
+        GROUP BY day 
+        ORDER BY day`, datePrefix+"%")
     if err != nil {
         return nil, err
     }
@@ -57,7 +67,11 @@ func (s *SQLiteStore) CountLogsPerDay(year int, month int) (map[int]int, error) 
 
 func (s *SQLiteStore) CountLogsByService(year int, month int) (map[string]int, error) {
     datePrefix := fmt.Sprintf("%04d-%02d", year, month)
-    rows, err := s.db.Query("SELECT service_name, COUNT(*) FROM log WHERE strftime('%Y-%m', timestamp) = ? AND service_name IS NOT NULL GROUP BY service_name", datePrefix)
+    rows, err := s.db.Query(`
+        SELECT service_name, COUNT(*) 
+        FROM log 
+        WHERE timestamp LIKE ? AND service_name IS NOT NULL 
+        GROUP BY service_name`, datePrefix+"%")
     if err != nil {
         return nil, err
     }
@@ -79,13 +93,14 @@ func (s *SQLiteStore) CountLogsByService(year int, month int) (map[string]int, e
 func (s *SQLiteStore) CountLogsByAttribute(year int, month int) (map[string]int, error) {
     datePrefix := fmt.Sprintf("%04d-%02d", year, month)
     query := `
-        SELECT key, COUNT(DISTINCT log_id) FROM attribute
+        SELECT key, COUNT(DISTINCT log_id) 
+        FROM attribute
         WHERE log_id IN (
-            SELECT id FROM log WHERE strftime('%Y-%m', timestamp) = ?
+            SELECT id FROM log WHERE timestamp LIKE ?
         )
         GROUP BY key;
     `
-    rows, err := s.db.Query(query, datePrefix)
+    rows, err := s.db.Query(query, datePrefix+"%")
     if err != nil {
         return nil, err
     }
@@ -103,3 +118,4 @@ func (s *SQLiteStore) CountLogsByAttribute(year int, month int) (map[string]int,
 
     return result, rows.Err()
 }
+

@@ -9,6 +9,27 @@ import (
     "gotail/ui/components"
 )
 
+func ErrorPercentage(totalLogs int, severityCount map[string]int) string {
+    errorLogs, exists := severityCount["ERROR"]
+
+    if !exists {
+        errorLogs = 0
+    }
+
+    if totalLogs == 0 {
+        return "0%"
+    }
+    percentage := float64(errorLogs) / float64(totalLogs) * 100
+    return fmt.Sprintf("%.2f%%", percentage)
+}
+
+func GetMapKey(mapInput map[string]int, mapKey string) int {
+    if value, exists := mapInput[mapKey]; exists {
+        return value
+    }
+    return 0
+}
+
 templ StatsView (data struct {
     Year            int
     Month           int
@@ -58,7 +79,7 @@ templ StatsView (data struct {
                     @components.MobileSidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
                 </div>
 
-                <div class="flex items-center justify-center space-x-4 mt-4">
+                <div class="flex items-center space-x-4">
                     <!-- Previous Month -->
                     <a
                         href={"/stats?year=" + fmt.Sprintf("%d", data.PrevYear) + "&month=" + fmt.Sprintf("%d", data.PrevMonth)}
@@ -80,7 +101,62 @@ templ StatsView (data struct {
                         @i.Icon("mdi:chevron-right", i.Params().SetDimensions(24, 24))
                     </a>
                 </div>
+                
+                <div class="grid lg:grid-cols-4 gap-4">
+                    <div class="bg-white shadow-sm border rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-4">Total Logs</h2>
+                        <p class="text-3xl font-bold">{data.TotalLogs}</p>
+                    </div>
+                    <div class="bg-white shadow-sm border rounded-lg p-4">
+                       <h2 class="text-xl font-semibold mb-4">
+                            Error Percentage
+                        </h2>
+                        <p class="text-3xl font-bold">
+                            {ErrorPercentage(data.TotalLogs, data.SeverityCounts)}
+                        </p>
+                    </div>
+                    <div class="bg-white shadow-sm border rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-4">
+                            Active Services
+                        </h2>
+                        <p class="text-3xl font-bold">
+                            {len(data.ServiceCounts)}
+                        </p>
+                    </div>
+                    <div class="bg-white shadow-sm border rounded-lg p-4">
+                        <h2 class="text-xl font-semibold mb-4">
+                            Unique Attributes
+                        </h2>
+                        <p class="text-3xl font-bold">
+                            {len(data.AttributeCounts)}
+                        </p>
+                    </div>
+                </div>
 
+                <!-- Daily Log Counts -->
+
+                <!-- Service Counts -->
+
+                <!-- Atribute Counts -->
+                <div class="space-y-4 w-full">
+                    for attribute, count := range data.AttributeCounts {
+                        <div class="bg-white shadow-sm border rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-4">{attribute}</h2>
+                            <p class="text-3xl font-bold">{count}</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="grid lg:grid-cols-5 gap-4">
+                    for _, i := range []string{"DEBUG", "INFO", "WARNING", "ERROR", "FATAL"} {
+                        <div class="bg-white shadow-sm border rounded-lg p-4">
+                            <h2 class="text-xl font-semibold mb-4">{i}</h2>
+                            <p class="text-3xl font-bold">
+                                {GetMapKey(data.SeverityCounts, i)}
+                            </p>
+                        </div>
+                    }
+                </div>
             </div>
         </body>
     </html>   
