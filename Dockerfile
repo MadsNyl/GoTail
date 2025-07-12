@@ -36,7 +36,6 @@ RUN chmod +x /usr/local/bin/cleanup.sh
 RUN ls -l /usr/local/bin
 
 CMD ["sh", "-c", "\
-    /usr/local/bin/cleanup.sh && \
     crond && \
     goose -v up && \
     exec ./main \
