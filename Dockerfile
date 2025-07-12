@@ -31,6 +31,8 @@ COPY migrations/ /migrations
 COPY cleanup.sh /usr/local/bin/cleanup.sh
 COPY cleanup.cron /etc/crontabs/root
 
+RUN ls -l /usr/local/bin
+
 RUN chmod +x /usr/local/bin/cleanup.sh
 
 CMD ["sh", "-c", "\
