@@ -34,3 +34,8 @@ type LogEntry struct {
     CreatedAt         *time.Time        `json:"created_at"`
     Attributes        map[string]any    `json:"attributes,omitempty"`
 };
+
+type DailyCount struct {
+	Day   int `json:"day"`
+	Count int `json:"count"`
+}

@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
+	"html/template"
 	"time"
 
 	i "github.com/callsamu/templicons"
@@ -31,7 +32,7 @@ func ErrorPercentage(totalLogs int, severityCount map[string]int) string {
 	return fmt.Sprintf("%.2f%%", percentage)
 }
 
-func GetMapKey(mapInput map[string]int, mapKey string) int {
+func GetMapValue(mapInput map[string]int, mapKey string) int {
 	if value, exists := mapInput[mapKey]; exists {
 		return value
 	}
@@ -43,7 +44,7 @@ func StatsView(data struct {
 	Month           int
 	TotalLogs       int
 	SeverityCounts  map[string]int
-	DailyCounts     map[int]int
+	DailyCounts     template.JS
 	ServiceCounts   map[string]int
 	AttributeCounts map[string]int
 	CurrentUrl      string
@@ -72,7 +73,7 @@ func StatsView(data struct {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"w-full h-full bg-gray-50/40 text-gray-900\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>GoTail - Stats</title><script src=\"https://cdn.tailwindcss.com\"></script><style>\r\n                html, body {\r\n                height: 100%;\r\n                margin: 0;\r\n                padding: 0;\r\n                }\r\n            </style></head><body id=\"body\" class=\"w-full h-full\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\" class=\"w-full h-full bg-gray-50/40 text-gray-900\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>GoTail - Stats</title><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script><style>\r\n                html, body {\r\n                height: 100%;\r\n                margin: 0;\r\n                padding: 0;\r\n                }\r\n            </style></head><body id=\"body\" class=\"w-full h-full\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -95,7 +96,7 @@ func StatsView(data struct {
 		var templ_7745c5c3_Var2 templ.SafeURL
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinURLErrs("/stats?year=" + fmt.Sprintf("%d", data.PrevYear) + "&month=" + fmt.Sprintf("%d", data.PrevMonth))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 85, Col: 127}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 87, Col: 127}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -116,7 +117,7 @@ func StatsView(data struct {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(time.Month(data.Month).String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 93, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 95, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -129,7 +130,7 @@ func StatsView(data struct {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.Year)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 93, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 95, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -142,7 +143,7 @@ func StatsView(data struct {
 		var templ_7745c5c3_Var5 templ.SafeURL
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs("/stats?year=" + fmt.Sprintf("%d", data.NextYear) + "&month=" + fmt.Sprintf("%d", data.NextMonth))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 98, Col: 127}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 100, Col: 127}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -156,120 +157,120 @@ func StatsView(data struct {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</a></div><div class=\"grid lg:grid-cols-4 gap-4\"><div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">Total Logs</h2><p class=\"text-3xl font-bold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</a></div><div class=\"grid lg:grid-cols-4 gap-4\"><div class=\"bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2\"><h2 class=\"text-lg font-semibold text-gray-600\">Total Logs</h2><p class=\"text-2xl font-bold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalLogs)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 108, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 113, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></div><div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">Error Percentage</h2><p class=\"text-3xl font-bold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p><p class=\"text-gray-500 text-sm\">This month</p></div><div class=\"bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2\"><h2 class=\"text-lg font-semibold text-gray-600\">Error Rate</h2><p class=\"text-2xl font-bold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(ErrorPercentage(data.TotalLogs, data.SeverityCounts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 115, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 124, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p></div><div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">Active Services</h2><p class=\"text-3xl font-bold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</p><p class=\"text-gray-500 text-sm\">Error severity logs</p></div><div class=\"bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2\"><h2 class=\"text-lg font-semibold text-gray-600\">Active Services</h2><p class=\"text-2xl font-bold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(len(data.ServiceCounts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 123, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 135, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">Unique Attributes</h2><p class=\"text-3xl font-bold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p><p class=\"text-gray-500 text-sm\">Services with logs</p></div><div class=\"bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2\"><h2 class=\"text-lg font-semibold text-gray-600\">Attribute Keys</h2><p class=\"text-2xl font-bold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(len(data.AttributeCounts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 131, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 147, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p></div></div><!-- Daily Log Counts --><!-- Service Counts --><!-- Atribute Counts --><div class=\"space-y-4 w-full\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</p><p class=\"text-gray-500 text-sm\">Unique keys</p></div></div><!-- Severity Levels --><div class=\"space-y-4\"><h1 class=\"text-2xl font-bold\">Severity Levels</h1><div class=\"grid lg:grid-cols-5 gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for attribute, count := range data.AttributeCounts {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">")
+		for _, i := range []string{"DEBUG", "INFO", "WARNING", "ERROR", "FATAL"} {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<div class=\"bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2\"><h2 class=\"text-lg font-semibold text-gray-600\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(attribute)
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 144, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 165, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</h2><p class=\"text-3xl font-bold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</h2><p class=\"text-2xl font-bold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(count)
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(GetMapValue(data.SeverityCounts, i))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 145, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 168, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p><p class=\"text-gray-500 text-sm\">Logs this month</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div><div class=\"grid lg:grid-cols-5 gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div></div><!-- Service Counts --><div class=\"space-y-4\"><h1 class=\"text-2xl font-bold\">Services</h1><div class=\"bg-white p-4 rounded-lg border shadow-sm space-y-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, i := range []string{"DEBUG", "INFO", "WARNING", "ERROR", "FATAL"} {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"bg-white shadow-sm border rounded-lg p-4\"><h2 class=\"text-xl font-semibold mb-4\">")
+		for service, count := range data.ServiceCounts {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"w-full flex items-center justify-between\"><h2 class=\"font-medium text-gray-600\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i)
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(service)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 153, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 188, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</h2><p class=\"text-3xl font-bold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</h2><p class=\"px-2 py-1 rounded-lg bg-gray-100 text-gray-700 border text-sm font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(GetMapKey(data.SeverityCounts, i))
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(count)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 155, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 191, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -280,7 +281,55 @@ func StatsView(data struct {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div></div><!-- Atribute Counts --><div class=\"space-y-4\"><h1 class=\"text-2xl font-bold\">Attributes</h1><div class=\"bg-white p-4 rounded-lg border shadow-sm space-y-2\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for attribute, count := range data.AttributeCounts {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<div class=\"w-full flex items-center justify-between\"><h2 class=\"font-medium text-gray-600\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(attribute)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 208, Col: 46}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</h2><p class=\"px-2 py-1 rounded-lg bg-gray-100 text-gray-700 border text-sm font-semibold\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(count)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 211, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div></div><!-- Daily Log Counts --><div class=\"space-y-4\"><h1 class=\"text-2xl font-bold\">Daily Log Count</h1><div class=\"bg-white p-4 rounded-lg border shadow-sm h-96\"><canvas id=\"dailyChart\" class=\"w-full h-full\"></canvas></div></div></div><script>\r\n                const rawData = JSON.parse(")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var16, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(data.DailyCounts)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/stats.templ`, Line: 231, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, ");\r\n\r\n                const labels = rawData.map(d => d.day);\r\n                const counts = rawData.map(d => d.count);\r\n\r\n                new Chart(document.getElementById(\"dailyChart\"), {\r\n                    type: \"line\",\r\n                    data: {\r\n                        labels,\r\n                        datasets: [{\r\n                            label: \"\", // no dataset label\r\n                            data: counts,\r\n                            borderColor: \"black\",\r\n                            backgroundColor: \"black\",\r\n                            borderWidth: 2,\r\n                            tension: 0.4,\r\n                            borderJoinStyle: \"round\",\r\n                            pointBackgroundColor: \"black\",\r\n                            pointBorderColor: \"black\",\r\n                            pointRadius: 5,\r\n                            pointHoverRadius: 6\r\n                        }]\r\n                    },\r\n                    options: {\r\n                        maintainAspectRatio: false,\r\n                        plugins: {\r\n                            legend: {\r\n                                display: false\r\n                            },\r\n                            tooltip: {\r\n                                backgroundColor: \"#ffffff\", // white background\r\n                                titleColor: \"#4b5563\",       // gray-600\r\n                                titleFont: {\r\n                                    size: 18 // ~text-lg\r\n                                },\r\n                                bodyColor: \"#111827\",        // Tailwind gray-900 (near black)\r\n                                bodyFont: {\r\n                                    size: 14\r\n                                },\r\n                                borderColor: \"#e5e7eb\", // Tailwind gray-200\r\n                                borderWidth: 1,\r\n                                padding: 10,\r\n                                rounding: 12,\r\n                                callbacks: {\r\n                                    title: function(tooltipItems) {\r\n                                        return `Day ${tooltipItems[0].label}`;\r\n                                    },\r\n                                    label: function(tooltipItem) {\r\n                                        return `${tooltipItem.formattedValue} logs`;\r\n                                    }\r\n                                },\r\n                            }\r\n                        },\r\n                        scales: {\r\n                            x: {\r\n                                grid: {\r\n                                    color: '#f3f4f6', // tailwind gray-100\r\n                                    borderDash: [2, 4]\r\n                                },\r\n                                ticks: {\r\n                                    display: true\r\n                                },\r\n                                title: {\r\n                                    display: false\r\n                                }\r\n                            },\r\n                            y: {\r\n                                grid: {\r\n                                    color: '#f3f4f6',\r\n                                    borderDash: [2, 4]\r\n                                },\r\n                                beginAtZero: true,\r\n                                ticks: {\r\n                                    stepSize: 150,\r\n                                    callback: function(value) {\r\n                                        // Show only step values (0, 150, 300, ...)\r\n                                        return value;\r\n                                    }\r\n                                },\r\n                                title: {\r\n                                    display: false\r\n                                }\r\n                            }\r\n                        }\r\n                    }\r\n                });\r\n            </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
