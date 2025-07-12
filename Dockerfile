@@ -18,7 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 # Final stage
 FROM alpine:latest
 
-RUN apk add --no-cache sqlite sqlite-libs tzdata ca-certificates
+RUN apk add --no-cache sqlite sqlite-libs tzdata ca-certificates busybox
 WORKDIR /app
 
 COPY --from=builder /app/main .
@@ -26,10 +26,15 @@ COPY --from=builder /go/bin/goose /usr/local/bin/
 
 EXPOSE 8080
 
-# Copy migration files into the image
+# Copy migration and cron files
 COPY migrations/ /migrations
+COPY cleanup.sh /usr/local/bin/cleanup.sh
+COPY cleanup.cron /etc/crontabs/root
+
+RUN chmod +x /usr/local/bin/cleanup.sh
 
 CMD ["sh", "-c", "\
+    crond && \
     goose -v up && \
     exec ./main \
 "]
