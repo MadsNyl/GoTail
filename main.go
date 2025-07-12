@@ -54,6 +54,7 @@ func main() {
 
 	// Route for HTML page
 	http.Handle("/", middleware.BasicAuth(user, pass)(http.HandlerFunc(htmlHandler.HandleLogsPage)))
+	http.Handle("/stats", middleware.BasicAuth(user, pass)(http.HandlerFunc(htmlHandler.HandleLogStatsPage)))
 
 
 	log.Println("Listening on :8080...")

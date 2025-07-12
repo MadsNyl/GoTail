@@ -1,0 +1,320 @@
+package ui
+
+import (
+    "time"
+    "fmt"
+	"html/template"
+
+    i "github.com/callsamu/templicons"
+
+    "gotail/ui/components"
+)
+
+func ErrorPercentage(totalLogs int, severityCount map[string]int) string {
+    errorLogs, exists := severityCount["ERROR"]
+
+    if !exists {
+        errorLogs = 0
+    }
+
+    if totalLogs == 0 {
+        return "0%"
+    }
+    percentage := float64(errorLogs) / float64(totalLogs) * 100
+    return fmt.Sprintf("%.2f%%", percentage)
+}
+
+func GetMapValue(mapInput map[string]int, mapKey string) int {
+    if value, exists := mapInput[mapKey]; exists {
+        return value
+    }
+    return 0
+}
+
+templ StatsView (data struct {
+    Year            int
+    Month           int
+    TotalLogs       int
+    SeverityCounts  map[string]int
+    DailyCounts     template.JS
+    ServiceCounts   map[string]int
+    AttributeCounts map[string]int
+    CurrentUrl   	string
+    PrevMonth       int
+    PrevYear        int
+    NextMonth       int
+    NextYear        int
+}) {
+    <!DOCTYPE html>
+    <html lang="en" class="w-full h-full bg-gray-50/40 text-gray-900">
+        <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>GoTail - Stats</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <style>
+                html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                }
+            </style>
+        </head>
+        <body
+            id="body"
+            class="w-full h-full"
+        >
+            @components.Sidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
+
+            <div class="lg:ml-64 px-2 py-6 lg:p-8 space-y-6">
+                <div class="flex items-start justify-between space-x-8">
+                    <div class="space-y-2">
+                        <h1 class="text-2xl lg:text-3xl font-bold">
+                            Statistics Dashboard
+                        </h1>
+                        <p class="text-sm lg:text-md text-gray-500">
+                            View statistics about your logs, including total counts, severity breakdowns, and more.
+                        </p>
+                    </div>
+
+                    @components.MobileSidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Previous Month -->
+                    <a
+                        href={"/stats?year=" + fmt.Sprintf("%d", data.PrevYear) + "&month=" + fmt.Sprintf("%d", data.PrevMonth)}
+                        class="p-2 rounded-full hover:bg-gray-100"
+                    >
+                        @i.Icon("mdi:chevron-left", i.Params().SetDimensions(24, 24))
+                    </a>
+
+                    <!-- Current Month/Year -->
+                    <div class="text-lg font-semibold">
+                        {time.Month(data.Month).String()} {data.Year}
+                    </div>
+
+                    <!-- Next Month -->
+                    <a
+                        href={"/stats?year=" + fmt.Sprintf("%d", data.NextYear) + "&month=" + fmt.Sprintf("%d", data.NextMonth)}
+                        class="p-2 rounded-full hover:bg-gray-100"
+                    >
+                        @i.Icon("mdi:chevron-right", i.Params().SetDimensions(24, 24))
+                    </a>
+                </div>
+                
+                <div class="grid lg:grid-cols-4 gap-4">
+                    <div class="bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2">
+                        <h2 class="text-lg font-semibold text-gray-600">
+                            Total Logs
+                        </h2>
+                        <p class="text-2xl font-bold">
+                            {data.TotalLogs}
+                        </p>
+                        <p class="text-gray-500 text-sm">
+                            This month
+                        </p>
+                    </div>
+                    <div class="bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2">
+                        <h2 class="text-lg font-semibold text-gray-600">
+                            Error Rate
+                        </h2>
+                        <p class="text-2xl font-bold">
+                            {ErrorPercentage(data.TotalLogs, data.SeverityCounts)}
+                        </p>
+                        <p class="text-gray-500 text-sm">
+                            Error severity logs
+                        </p>
+                    </div>
+                    <div class="bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2">
+                        <h2 class="text-lg font-semibold text-gray-600">
+                            Active Services
+                        </h2>
+                        <p class="text-2xl font-bold">
+                            {len(data.ServiceCounts)}
+                        </p>
+                        <p class="text-gray-500 text-sm">
+                            Services with logs
+                        </p>
+                    </div>
+
+                    <div class="bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2">
+                        <h2 class="text-lg font-semibold text-gray-600">
+                            Attribute Keys
+                        </h2>
+                        <p class="text-2xl font-bold">
+                            {len(data.AttributeCounts)}
+                        </p>
+                        <p class="text-gray-500 text-sm">
+                            Unique keys
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Severity Levels -->
+                <div class="space-y-4">
+                    <h1 class="text-2xl font-bold">
+                        Severity Levels
+                    </h1>
+
+                    <div class="grid lg:grid-cols-5 gap-4">
+                        for _, i := range []string{"DEBUG", "INFO", "WARNING", "ERROR", "FATAL"} {
+                            <div class="bg-white shadow-sm border rounded-lg py-4 px-6 space-y-2">
+                                <h2 class="text-lg font-semibold text-gray-600">
+                                    {i}
+                                </h2>
+                                <p class="text-2xl font-bold">
+                                    {GetMapValue(data.SeverityCounts, i)}
+                                </p>
+                                <p class="text-gray-500 text-sm">
+                                    Logs this month
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Service Counts -->
+                <div class="space-y-4">
+                    <h1 class="text-2xl font-bold">
+                        Services
+                    </h1>
+
+                    <div class="bg-white p-4 rounded-lg border shadow-sm space-y-2">
+                        for service, count := range data.ServiceCounts {
+                            <div class="w-full flex items-center justify-between">
+                                <h2 class="font-medium text-gray-600">
+                                    {service}
+                                </h2>
+                                <p class="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 border text-sm font-semibold">
+                                    {count}
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Atribute Counts -->
+                <div class="space-y-4">
+                    <h1 class="text-2xl font-bold">
+                        Attributes
+                    </h1>
+
+                    <div class="bg-white p-4 rounded-lg border shadow-sm space-y-2">
+                        for attribute, count := range data.AttributeCounts {
+                            <div class="w-full flex items-center justify-between">
+                                <h2 class="font-medium text-gray-600">
+                                    {attribute}
+                                </h2>
+                                <p class="px-2 py-1 rounded-lg bg-gray-100 text-gray-700 border text-sm font-semibold">
+                                    {count}
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Daily Log Counts -->
+                <div class="space-y-4">
+                    <h1 class="text-2xl font-bold">
+                        Daily Log Count
+                    </h1>
+
+                    <div class="bg-white p-4 rounded-lg border shadow-sm h-96">
+                        <canvas id="dailyChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                const rawData = JSON.parse({{ data.DailyCounts }});
+
+                const labels = rawData.map(d => d.day);
+                const counts = rawData.map(d => d.count);
+
+                new Chart(document.getElementById("dailyChart"), {
+                    type: "line",
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: "", // no dataset label
+                            data: counts,
+                            borderColor: "black",
+                            backgroundColor: "black",
+                            borderWidth: 2,
+                            tension: 0.4,
+                            borderJoinStyle: "round",
+                            pointBackgroundColor: "black",
+                            pointBorderColor: "black",
+                            pointRadius: 5,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: "#ffffff", // white background
+                                titleColor: "#4b5563",       // gray-600
+                                titleFont: {
+                                    size: 18 // ~text-lg
+                                },
+                                bodyColor: "#111827",        // Tailwind gray-900 (near black)
+                                bodyFont: {
+                                    size: 14
+                                },
+                                borderColor: "#e5e7eb", // Tailwind gray-200
+                                borderWidth: 1,
+                                padding: 10,
+                                rounding: 12,
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        return `Day ${tooltipItems[0].label}`;
+                                    },
+                                    label: function(tooltipItem) {
+                                        return `${tooltipItem.formattedValue} logs`;
+                                    }
+                                },
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: '#f3f4f6', // tailwind gray-100
+                                    borderDash: [2, 4]
+                                },
+                                ticks: {
+                                    display: true
+                                },
+                                title: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: '#f3f4f6',
+                                    borderDash: [2, 4]
+                                },
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 150,
+                                    callback: function(value) {
+                                        // Show only step values (0, 150, 300, ...)
+                                        return value;
+                                    }
+                                },
+                                title: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            </script>
+        </body>
+    </html>   
+}
