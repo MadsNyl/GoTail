@@ -19,7 +19,7 @@ info:
     name: GoTail
 
 servers:
-  - url: /
+  - url: ""
     description: Current host
 
 security:
