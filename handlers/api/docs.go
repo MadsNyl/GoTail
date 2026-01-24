@@ -1,12 +1,26 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 )
 
 func HandleDocs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(docsHTML))
+	// Get the current scheme and host from the request
+	scheme := "https"
+	if r.Header.Get("X-Forwarded-Proto") != "" {
+		scheme = r.Header.Get("X-Forwarded-Proto")
+	} else if r.URL.Scheme == "http" {
+		scheme = "http"
+	}
+	host := r.Host
+	if r.Header.Get("X-Forwarded-Host") != "" {
+		host = r.Header.Get("X-Forwarded-Host")
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, host)
+	html := fmt.Sprintf(docsHTML, baseURL)
+	w.Write([]byte(html))
 }
 
 const docsHTML = `<!DOCTYPE html>
@@ -35,6 +49,13 @@ const docsHTML = `<!DOCTYPE html>
         deepLinking: true,
         defaultModelsExpandDepth: 1,
         defaultModelExpandDepth: 1,
+        onComplete: function(system) {
+          // Override the servers to use the current host
+          system.presets.configs.servers = [{
+            url: '%s',
+            description: 'Current host'
+          }];
+        }
       });
     };
   </script>
