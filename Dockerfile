@@ -23,6 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /app/main .
 COPY --from=builder /go/bin/goose /usr/local/bin/
+COPY --from=builder /app/openapi.yaml .
 
 EXPOSE 8080
 
