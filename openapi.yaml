@@ -1,0 +1,382 @@
+openapi: 3.0.3
+info:
+  title: GoTail API
+  description: |
+    GoTail is a lightweight log aggregation and viewing service.
+
+    ## Authentication
+
+    The API supports two authentication methods:
+
+    1. **API Key** - Pass via `X-API-Key` header or `Authorization: Bearer <key>`
+    2. **Basic Auth** - Username/password for the `/log` endpoint
+
+    API keys must be 35 characters: `gt_` prefix + 32 alphanumeric characters.
+
+    Example key: `gt_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6`
+  version: 1.0.0
+  contact:
+    name: GoTail
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+security:
+  - ApiKeyHeader: []
+  - ApiKeyBearer: []
+
+paths:
+  /log:
+    post:
+      summary: Ingest a log entry
+      description: Submit a new log entry to the system. Accepts both API key and Basic authentication.
+      tags:
+        - Ingestion
+      security:
+        - ApiKeyHeader: []
+        - ApiKeyBearer: []
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogInput'
+            example:
+              timestamp: "2026-01-24T12:00:00Z"
+              severity_text: "ERROR"
+              severity_number: 17
+              body: "Connection timeout to database"
+              service_name: "api-service"
+              service_version: "1.2.0"
+              host_name: "prod-server-01"
+              attributes:
+                user_id: "12345"
+                request_id: "abc-123"
+                environment: "production"
+      responses:
+        '201':
+          description: Log entry created successfully
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/logs:
+    get:
+      summary: Fetch log entries
+      description: Retrieve log entries with optional filtering and pagination.
+      tags:
+        - Logs
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of entries per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: severity
+          in: query
+          description: Filter by severity level
+          schema:
+            type: string
+            enum: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL]
+        - name: service
+          in: query
+          description: Filter by service name
+          schema:
+            type: string
+        - name: attr_key
+          in: query
+          description: Filter by attribute key (use with attr_value)
+          schema:
+            type: string
+        - name: attr_value
+          in: query
+          description: Filter by attribute value (use with attr_key)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of log entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogsResponse'
+              example:
+                logs:
+                  - id: "550e8400-e29b-41d4-a716-446655440000"
+                    timestamp: "2026-01-24T12:00:00Z"
+                    severity_text: "ERROR"
+                    severity_number: 17
+                    body: "Connection timeout to database"
+                    service_name: "api-service"
+                    attributes:
+                      user_id: "12345"
+                page: 1
+                limit: 20
+                total: 150
+                total_pages: 8
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/stats:
+    get:
+      summary: Fetch log statistics
+      description: Retrieve aggregated statistics for a specific month.
+      tags:
+        - Statistics
+      parameters:
+        - name: year
+          in: query
+          description: Year (defaults to current year)
+          schema:
+            type: integer
+            minimum: 2000
+            example: 2026
+        - name: month
+          in: query
+          description: Month 1-12 (defaults to current month)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 1
+      responses:
+        '200':
+          description: Monthly statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+              example:
+                year: 2026
+                month: 1
+                total_logs: 15420
+                severity_counts:
+                  INFO: 12000
+                  WARN: 2500
+                  ERROR: 900
+                  DEBUG: 20
+                daily_counts:
+                  - day: 1
+                    count: 520
+                  - day: 2
+                    count: 480
+                service_counts:
+                  api-service: 8000
+                  web-service: 5000
+                  worker-service: 2420
+                attribute_counts:
+                  environment: 15420
+                  user_id: 10200
+        '400':
+          description: Invalid year or month parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key passed in X-API-Key header
+    ApiKeyBearer:
+      type: http
+      scheme: bearer
+      description: API key passed as Bearer token
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication (username/password)
+
+  schemas:
+    LogInput:
+      type: object
+      required:
+        - severity_text
+        - severity_number
+        - body
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Log timestamp (defaults to current time)
+        severity_text:
+          type: string
+          enum: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL]
+          description: Human-readable severity level
+        severity_number:
+          type: integer
+          description: |
+            Numeric severity (OpenTelemetry standard):
+            - TRACE: 1-4
+            - DEBUG: 5-8
+            - INFO: 9-12
+            - WARN: 13-16
+            - ERROR: 17-20
+            - FATAL: 21-24
+        body:
+          type: string
+          description: Log message content
+        service_name:
+          type: string
+          description: Name of the service generating the log
+        service_version:
+          type: string
+          description: Version of the service
+        service_instance_id:
+          type: string
+          description: Unique instance identifier
+        host_name:
+          type: string
+          description: Host machine name
+        scope_name:
+          type: string
+          description: Instrumentation scope name
+        scope_version:
+          type: string
+          description: Instrumentation scope version
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom key-value attributes
+
+    LogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique log entry ID
+        timestamp:
+          type: string
+          format: date-time
+        severity_text:
+          type: string
+        severity_number:
+          type: integer
+        body:
+          type: string
+        service_name:
+          type: string
+          nullable: true
+        service_version:
+          type: string
+          nullable: true
+        service_instance_id:
+          type: string
+          nullable: true
+        host_name:
+          type: string
+          nullable: true
+        scope_name:
+          type: string
+          nullable: true
+        scope_version:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        attributes:
+          type: object
+          additionalProperties: true
+
+    LogsResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogEntry'
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Entries per page
+        total:
+          type: integer
+          description: Total number of matching entries
+        total_pages:
+          type: integer
+          description: Total number of pages
+
+    StatsResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        total_logs:
+          type: integer
+          description: Total logs for the month
+        severity_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Log count by severity level
+        daily_counts:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: integer
+              count:
+                type: integer
+          description: Log count per day of the month
+        service_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Log count by service name
+        attribute_counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of logs containing each attribute key
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: integer
+          description: HTTP status code

@@ -72,7 +72,7 @@ templ LogsView(data struct {
       @components.Sidebar(struct{CurrentUrl string}{CurrentUrl: data.CurrentUrl})
       
       for _, item := range data.Logs {
-        @components.Drawer(struct{ID string}{ID: fmt.Sprintf("log-%d", item.ID)}){
+        @components.Drawer(struct{ID string}{ID: fmt.Sprintf("log-%s", item.ID)}){
           <div class="space-y-8">
             <div class="space-y-2">
               <h2 class="text-2xl font-semibold">
@@ -295,7 +295,7 @@ templ LogsView(data struct {
           for _, item := range data.Logs {
             <div 
               class="rounded-lg border bg-white shadow p-4 space-y-4 cursor-pointer"
-              onClick={onOpenDrawer(fmt.Sprintf("log-%d", item.ID))}
+              onClick={onOpenDrawer(fmt.Sprintf("log-%s", item.ID))}
             >
               <div class="flex w-full justify-between items-center">
                 <p class="text-sm">{item.Timestamp.Format("2006-01-02 15:04:05")}</p>
@@ -352,7 +352,7 @@ templ LogsView(data struct {
             for _, item := range data.Logs {
               <tr
                 class="border-t cursor-pointer"
-                onClick={onOpenDrawer(fmt.Sprintf("log-%d", item.ID))}
+                onClick={onOpenDrawer(fmt.Sprintf("log-%s", item.ID))}
               >
                 <td class="p-2">{item.Timestamp.Format("2006-01-02 15:04:05")}</td>
                 <td class="p-2">

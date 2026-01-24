@@ -13,10 +13,13 @@ GoTail was built to be a **cheap**, **lightweight**, and **self-hostable** loggi
 ## ✨ Features
 
 - ✅ **Log ingestion via `POST /log`**
+- ✅ **JSON API endpoints (`GET /api/logs`, `GET /api/stats`)**
 - ✅ **Lightweight UI built with [Templ](https://templ.guide)**
 - ✅ **Dockerized with SQLite volume support**
 - ✅ **Goose-based database migrations**
-- ✅ **Basic authentication for both UI and log endpoint**
+- ✅ **Basic authentication for UI**
+- ✅ **API key authentication for programmatic access**
+- ✅ **Headless mode for API-only deployments**
 - ✅ **Built-in cron job for automatic log cleanup**
 - ✅ **Easy to fork and customize**
 - ❌ **No tracing support (yet)**
@@ -48,6 +51,62 @@ Logs are submitted via a POST request to `/log` with the following JSON body:
 
 ---
 
+## 📡 JSON API
+
+GoTail provides JSON API endpoints for programmatic access, protected by API key authentication.
+
+### `GET /api/logs`
+
+Query parameters:
+- `page` – Page number (default: 1)
+- `limit` – Results per page (default: 20, max: 100)
+- `severity` – Filter by severity (e.g., `INFO`, `ERROR`)
+- `service` – Filter by service name
+- `attr_key` / `attr_value` – Filter by attribute
+
+```bash
+curl -H "X-API-Key: gt_your_api_key_here_32chars" \
+  "http://localhost:8080/api/logs?severity=ERROR&limit=50"
+```
+
+### `GET /api/stats`
+
+Query parameters:
+- `year` – Year (default: current year)
+- `month` – Month 1-12 (default: current month)
+
+```bash
+curl -H "X-API-Key: gt_your_api_key_here_32chars" \
+  "http://localhost:8080/api/stats?year=2026&month=1"
+```
+
+---
+
+## 📄 API Documentation
+
+GoTail includes built-in interactive API docs and an OpenAPI 3.0 spec.
+
+**Interactive docs (no auth required):**
+- `GET /docs` – Swagger UI interface
+- `GET /openapi.yaml` – Raw OpenAPI spec
+
+**Generate client SDKs:**
+```bash
+# Go client
+go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest -package gotail openapi.yaml > client.go
+
+# TypeScript client
+npx openapi-typescript-codegen --input openapi.yaml --output ./client
+
+# Python client
+pip install openapi-python-client
+openapi-python-client generate --path openapi.yaml
+```
+
+**AI Integration:** The OpenAPI spec is machine-readable - share `openapi.yaml` with AI tools to help implement integrations.
+
+---
+
 ## 🖥️ UI
 
 - Rendered server-side using Go Templ
@@ -65,12 +124,31 @@ Logs are submitted via a POST request to `/log` with the following JSON body:
 
 ## 🔒 Authentication
 
-Basic authentication is enforced for:
+GoTail supports two authentication methods:
 
-- The `POST /log` endpoint
-- The web UI
+### Basic Authentication
+- Used for the **web UI** (`/` and `/stats`)
+- Configured via `UI_USERNAME` and `UI_PASSWORD`
 
-Credentials are configured via environment variables (see below).
+### API Key Authentication
+- Used for **JSON API endpoints** (`/api/logs`, `/api/stats`)
+- Keys provided via `X-API-Key` header or `Authorization: Bearer` header
+- Configured via `GOTAIL_API_KEYS` (comma-separated for multiple keys)
+
+### Log Ingestion (`POST /log`)
+- Accepts **both** basic auth and API key authentication
+- Allows services to submit logs using API keys while users access the UI with credentials
+
+### API Key Format
+Keys must be 35 characters: `gt_` prefix + 32 alphanumeric characters.
+
+Generate a key:
+```bash
+echo "gt_$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)"
+```
+
+### Headless Mode
+Set `HEADLESS_MODE=true` to disable the UI entirely and run GoTail as an API-only service. In this mode, `UI_USERNAME` and `UI_PASSWORD` are not required.
 
 ---
 
@@ -99,6 +177,12 @@ DB_DSN=logs.db
 # === UI web basic auth ===
 UI_USERNAME=admin
 UI_PASSWORD=admin
+
+# === API key authentication (comma-separated for multiple keys) ===
+GOTAIL_API_KEYS=gt_a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6
+
+# === Headless mode (set to "true" to disable UI) ===
+HEADLESS_MODE=false
 
 # === Goose migration tool configuration ===
 GOOSE_DRIVER=sqlite3
@@ -155,9 +239,15 @@ GOOSE_DRIVER=sqlite3
 GOOSE_DBSTRING=/app/logs.db
 GOOSE_MIGRATION_DIR=./migrations
 
-# Basic Auth for UI and /log
+# Basic Auth for UI
 UI_USERNAME=admin
 UI_PASSWORD=your_secure_password
+
+# API keys for programmatic access (optional, comma-separated)
+GOTAIL_API_KEYS=gt_your_api_key_here_32chars
+
+# Set to "true" for API-only mode without UI (optional)
+HEADLESS_MODE=false
 ```
 
 ### 💾 3. Add a persistent volume
