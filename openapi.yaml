@@ -205,6 +205,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/attributes:
+    get:
+      summary: List attribute keys
+      description: Retrieve all unique attribute keys used in log entries. Useful for building filter UIs.
+      tags:
+        - Filters
+      responses:
+        '200':
+          description: List of attribute keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeKeysResponse'
+              example:
+                keys:
+                  - environment
+                  - user_id
+                  - request_id
+                  - trace_id
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/services:
+    get:
+      summary: List services
+      description: Retrieve all unique service names that have logged entries. Useful for building filter UIs.
+      tags:
+        - Filters
+      responses:
+        '200':
+          description: List of service names
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicesResponse'
+              example:
+                services:
+                  - api-service
+                  - web-service
+                  - worker-service
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     ApiKeyHeader:
@@ -370,6 +421,24 @@ components:
           additionalProperties:
             type: integer
           description: Count of logs containing each attribute key
+
+    AttributeKeysResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+          description: List of unique attribute keys
+
+    ServicesResponse:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            type: string
+          description: List of unique service names
 
     Error:
       type: object

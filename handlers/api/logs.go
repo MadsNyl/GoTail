@@ -59,6 +59,38 @@ func (h *APIHandler) HandleLogsAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, response)
 }
 
+func (h *APIHandler) HandleAttributeKeysAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	keys, err := h.Store.GetAttributeKeys()
+	if err != nil {
+		log.Printf("Error fetching attribute keys: %v", err)
+		writeError(w, "Failed to fetch attribute keys", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string][]string{"keys": keys})
+}
+
+func (h *APIHandler) HandleServicesAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	services, err := h.Store.GetServices()
+	if err != nil {
+		log.Printf("Error fetching services: %v", err)
+		writeError(w, "Failed to fetch services", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string][]string{"services": services})
+}
+
 func writeJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(data); err != nil {

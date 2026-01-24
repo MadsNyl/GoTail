@@ -87,6 +87,8 @@ func main() {
 	if apiKeys != "" {
 		http.Handle("/api/logs", middleware.APIKeyAuth()(http.HandlerFunc(apiHandler.HandleLogsAPI)))
 		http.Handle("/api/stats", middleware.APIKeyAuth()(http.HandlerFunc(apiHandler.HandleStatsAPI)))
+		http.Handle("/api/attributes", middleware.APIKeyAuth()(http.HandlerFunc(apiHandler.HandleAttributeKeysAPI)))
+		http.Handle("/api/services", middleware.APIKeyAuth()(http.HandlerFunc(apiHandler.HandleServicesAPI)))
 	}
 
 	// UI routes (only if not in headless mode)
