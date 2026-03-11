@@ -70,11 +70,13 @@ func main() {
 	})
 
 	// Route for submitting logs (POST) - accepts both API key and basic auth
+	logHandlerWithLimit := middleware.MaxBodySize(1 << 20)(http.HandlerFunc(logHandler.HandleLogInsert))
+
 	if user != "" && pass != "" {
-		http.Handle("/log", middleware.EitherAuth(user, pass)(http.HandlerFunc(logHandler.HandleLogInsert)))
+		http.Handle("/log", middleware.EitherAuth(user, pass)(logHandlerWithLimit))
 	} else if apiKeys != "" {
 		// Headless mode with only API key auth for /log
-		http.Handle("/log", middleware.APIKeyAuth()(http.HandlerFunc(logHandler.HandleLogInsert)))
+		http.Handle("/log", middleware.APIKeyAuth()(logHandlerWithLimit))
 	}
 
 	// API routes (available if API keys are configured)
