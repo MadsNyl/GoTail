@@ -1,6 +1,8 @@
 package sqlite
 
 import (
+	"context"
+	"database/sql"
 	"gotail/models"
 	"strings"
 	"time"
@@ -16,6 +18,12 @@ func (s *SQLiteStore) GetLogsFiltered(
 ) ([]models.LogEntry, int, error) {
 	offset := (page - 1) * limit
 
+	tx, err := s.readDB.BeginTx(context.Background(), &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, 0, err
+	}
+	defer tx.Rollback()
+
 	var (
 		whereClauses []string
 		args         []interface{}
@@ -25,7 +33,6 @@ func (s *SQLiteStore) GetLogsFiltered(
 		SELECT l.*
 		FROM log l`
 
-	// Add join if filtering on attribute
 	if attrKey != "" && attrValue != "" {
 		query += `
 			INNER JOIN attribute a ON a.log_id = l.id`
@@ -63,16 +70,21 @@ func (s *SQLiteStore) GetLogsFiltered(
 	}
 
 	var count int
-	countArgs := args[:len(args)-2] // exclude limit and offset
-	if err := s.db.QueryRow(countQuery, countArgs...).Scan(&count); err != nil {
+	countArgs := args[:len(args)-2]
+	if err := tx.QueryRow(countQuery, countArgs...).Scan(&count); err != nil {
 		return nil, 0, err
 	}
 
-	rows, err := s.db.Query(query, args...)
+	rows, err := tx.Query(query, args...)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
+
+	loc, err := time.LoadLocation("Europe/Oslo")
+	if err != nil {
+		loc = time.FixedZone("CET", 1*60*60)
+	}
 
 	var logs []models.LogEntry
 	for rows.Next() {
@@ -95,15 +107,10 @@ func (s *SQLiteStore) GetLogsFiltered(
 		if err != nil {
 			return nil, 0, err
 		}
-		loc, err := time.LoadLocation("Europe/Oslo")
-		if err != nil {
-			// fallback
-			loc = time.FixedZone("CET", 1*60*60) // backup zone
-		}
 
 		entry.Timestamp = entry.Timestamp.In(loc)
 
-		attrRows, err := s.db.Query(`SELECT key, value FROM attribute WHERE log_id = ?`, entry.ID)
+		attrRows, err := tx.Query(`SELECT key, value FROM attribute WHERE log_id = ?`, entry.ID)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -130,32 +137,30 @@ func (s *SQLiteStore) GetLogsFiltered(
 	return logs, count, nil
 }
 
-
 func (s *SQLiteStore) GetAttributeKeys() ([]string, error) {
-    // Example implementation, adjust according to your schema
-    rows, err := s.db.Query("SELECT DISTINCT key FROM attribute")
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := s.readDB.Query("SELECT DISTINCT key FROM attribute")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var keys []string
-    for rows.Next() {
-        var key string
-        if err := rows.Scan(&key); err != nil {
-            return nil, err
-        }
-        keys = append(keys, key)
-    }
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
-    return keys, nil
+	var keys []string
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return keys, nil
 }
 
 func (s *SQLiteStore) GetTotalLogs() (int, error) {
 	var count int
-	err := s.db.QueryRow("SELECT COUNT(*) FROM log").Scan(&count)
+	err := s.readDB.QueryRow("SELECT COUNT(*) FROM log").Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +168,7 @@ func (s *SQLiteStore) GetTotalLogs() (int, error) {
 }
 
 func (s *SQLiteStore) GetServices() ([]string, error) {
-	rows, err := s.db.Query("SELECT DISTINCT service_name FROM log")
+	rows, err := s.readDB.Query("SELECT DISTINCT service_name FROM log")
 	if err != nil {
 		return nil, err
 	}
