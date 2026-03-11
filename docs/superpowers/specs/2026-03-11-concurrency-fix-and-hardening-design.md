@@ -28,14 +28,19 @@ type SQLiteStore struct {
 
 **Initialization:**
 - Open write connection: DSN + `?_busy_timeout=5000`
-- Open read connection: DSN + `?mode=ro&_busy_timeout=5000`
+- Open read connection: DSN + `?_busy_timeout=5000` and execute `PRAGMA query_only=ON` (since `mode=ro` may not be supported by `modernc.org/sqlite`)
 - Execute `PRAGMA journal_mode=WAL` on write connection
+- Execute `PRAGMA synchronous=NORMAL` (safe with WAL, better write performance)
+- Execute `PRAGMA foreign_keys=ON` (SQLite does not enforce by default)
 - `writeDB.SetMaxOpenConns(1)`
+- Remove broken busy_timeout logic from `main.go` (line 44 checks `dsn == "sqlite"` instead of `driver == "sqlite"` — the timeout is handled inside `NewSQLiteStore` now)
 
-**Read methods** (`GetLogsFiltered`, `GetAttributeKeys`, `GetTotalLogs`, `GetServices`, all stats methods):
+**`Close()` method** must close both `writeDB` and `readDB`.
+
+**Read methods** (`GetLogsFiltered`, `GetAttributeKeys`, `GetTotalLogs`, `GetServices`, all stats methods including `CountLogsByAttribute`):
 - Switch from `s.db` to `s.readDB`
-- Wrap queries in a read-only transaction (`s.readDB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})`) for snapshot consistency
-- `GetLogsFiltered` benefits most: count query, data query, and per-log attribute queries all see the same snapshot
+- Multi-query reads (`GetLogsFiltered`) wrapped in a read-only transaction for snapshot consistency
+- Single-query reads (`GetTotalLogs`, `GetAttributeKeys`, `GetServices`, individual stats methods) do not need transaction wrapping — a single query is already atomic
 
 **Write methods** (`InsertLog`):
 - Continue using `s.writeDB` with mutex protection
@@ -70,8 +75,10 @@ type SQLiteStore struct {
 Log failed authentication attempts to stderr with:
 - Timestamp (via `log.Printf`)
 - Client IP (`r.RemoteAddr`)
-- Auth method (basic auth / API key)
+- Auth method (basic auth / API key / either auth)
 - Requested path
+
+Also update the `EitherAuth` middleware's own failure path in `api_key_auth.go`.
 
 No credentials are logged. Uses existing `log.Printf` pattern.
 
@@ -84,12 +91,22 @@ Replace `LIKE` pattern matching with proper date range queries:
 - `CountLogsByMonth`: `WHERE timestamp >= ? AND timestamp < ?` using first/last day of month
 - `CountLogsPerDay`: Same range filter, group by `DATE(timestamp)` instead of `substr()`
 - `CountLogsByService` and `CountLogsBySeverity`: Same range-based filtering
+- `CountLogsByAttribute`: Same range-based filtering (also uses `LIKE` today)
+
+Date range boundaries computed in Go:
+```go
+start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, loc)
+end := start.AddDate(0, 1, 0)
+// WHERE timestamp >= start AND timestamp < end
+```
+
+Timestamps are stored as RFC 3339 strings which support lexicographic comparison.
 
 Enables proper use of `idx_log_ts` index.
 
 ### 6. Endpoint & Concurrency Tests
 
-**Files:** New test files
+**Files:** `db/sqlite/store_test.go` (new), `handlers/integration_test.go` (new)
 
 **Test database setup:**
 - Each test creates a temporary SQLite DB via `t.TempDir()`
@@ -109,8 +126,12 @@ Enables proper use of `idx_log_ts` index.
 - Mixed concurrent reads and writes
 - Assert: no errors, data consistency, no deadlocks
 
+**Auth in tests:** Tests inject handlers directly (bypassing auth middleware) for endpoint tests. Concurrency tests may use a test helper that sets up valid API keys.
+
 ## Out of Scope
 
 - Host header injection in docs.go (deferred)
 - Rate limiting
 - Open CORS on documentation endpoints
+- N+1 attribute query optimization in `GetLogsFiltered` (future)
+- Graceful HTTP server shutdown
