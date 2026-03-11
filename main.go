@@ -97,5 +97,5 @@ func main() {
 	if headlessMode {
 		log.Println("Running in headless mode (UI disabled)")
 	}
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", middleware.Recovery(http.DefaultServeMux)))
 }
