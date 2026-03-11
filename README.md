@@ -205,6 +205,26 @@ docker run -p 8080:8080 -v $(pwd)/data:/app gotail
 
 ---
 
+## 🧪 Testing
+
+Run the full test suite with race detection:
+
+```bash
+go test ./... -race
+```
+
+The test suite includes:
+
+- **Store-level tests** (`db/sqlite/store_test.go`) — CRUD operations, attribute keys, services, monthly stats
+- **Concurrency tests** — concurrent writes, concurrent reads, and mixed read/write scenarios to verify WAL mode and connection pool safety
+- **Integration tests** (`handlers/integration_test.go`) — HTTP endpoint tests for POST /log (valid, invalid JSON, body too large, too many attributes), GET /api/logs, GET /api/stats, GET /api/attributes, GET /api/services
+- **Concurrent HTTP tests** — 25 parallel writes + 25 parallel reads to verify no deadlocks or transaction conflicts
+- **Middleware tests** (`middleware/`, `handlers/api/`) — API key auth, basic auth, EitherAuth, response format
+
+Each test creates a temporary SQLite database via `t.TempDir()`, applies migrations, and cleans up automatically.
+
+---
+
 ## 🛠 Development
 
 Development is powered by [`air`](https://github.com/air-verse/air). To start developing:
