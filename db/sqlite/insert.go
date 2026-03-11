@@ -7,10 +7,10 @@ import (
 )
 
 func (s *SQLiteStore) InsertLog(entry models.LogEntry) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	tx, err := s.db.Begin()
+	tx, err := s.writeDB.Begin()
 	if err != nil {
 		return err
 	}

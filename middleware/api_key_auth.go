@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/sha256"
 	"crypto/subtle"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -43,11 +44,13 @@ func APIKeyAuth() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := extractAPIKey(r)
 			if key == "" {
+				log.Printf("AUTH FAILURE: api_key missing, ip=%s path=%s", r.RemoteAddr, r.URL.Path)
 				unauthorizedJSON(w, "API key required")
 				return
 			}
 
 			if !validateAPIKey(key) {
+				log.Printf("AUTH FAILURE: api_key invalid, ip=%s path=%s", r.RemoteAddr, r.URL.Path)
 				unauthorizedJSON(w, "Invalid API key")
 				return
 			}
@@ -85,6 +88,7 @@ func EitherAuth(expectedUser, expectedPass string) func(http.Handler) http.Handl
 			}
 
 			// Neither authentication method succeeded
+			log.Printf("AUTH FAILURE: either_auth no valid method, ip=%s path=%s", r.RemoteAddr, r.URL.Path)
 			unauthorized(w)
 		})
 	}

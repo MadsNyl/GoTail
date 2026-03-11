@@ -6,7 +6,7 @@ WORKDIR /app
 # Install templ and goose CLI
 RUN apk add --no-cache git
 RUN go install github.com/a-h/templ/cmd/templ@latest
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+RUN go install github.com/pressly/goose/v3/cmd/goose@v3.24.1
 
 # Cache and build
 COPY go.mod go.sum ./

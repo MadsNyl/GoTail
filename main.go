@@ -39,12 +39,6 @@ func main() {
 		log.Fatal("DB_DRIVER and DB_DSN must be set in .env")
 	}
 
-	// Set busy timeout for SQLite if using SQLite
-	// This is important to avoid database lock issues
-	if dsn == "sqlite" {
-		dsn = dsn + "?_busy_timeout=5000"
-	}
-
 	// Initialize the correct DB store based on driver
 	store, err := db.New(driver, dsn)
 	if err != nil {
@@ -76,11 +70,13 @@ func main() {
 	})
 
 	// Route for submitting logs (POST) - accepts both API key and basic auth
+	logHandlerWithLimit := middleware.MaxBodySize(1 << 20)(http.HandlerFunc(logHandler.HandleLogInsert))
+
 	if user != "" && pass != "" {
-		http.Handle("/log", middleware.EitherAuth(user, pass)(http.HandlerFunc(logHandler.HandleLogInsert)))
+		http.Handle("/log", middleware.EitherAuth(user, pass)(logHandlerWithLimit))
 	} else if apiKeys != "" {
 		// Headless mode with only API key auth for /log
-		http.Handle("/log", middleware.APIKeyAuth()(http.HandlerFunc(logHandler.HandleLogInsert)))
+		http.Handle("/log", middleware.APIKeyAuth()(logHandlerWithLimit))
 	}
 
 	// API routes (available if API keys are configured)
@@ -101,5 +97,5 @@ func main() {
 	if headlessMode {
 		log.Println("Running in headless mode (UI disabled)")
 	}
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", middleware.Recovery(http.DefaultServeMux)))
 }
