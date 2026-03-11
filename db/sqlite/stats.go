@@ -51,7 +51,7 @@ func (s *SQLiteStore) CountLogsBySeverity(year int, month int) (map[string]int, 
 func (s *SQLiteStore) CountLogsPerDay(year int, month int) (map[int]int, error) {
 	start, end := dateRange(year, month)
 	rows, err := s.readDB.Query(`
-		SELECT CAST(strftime('%d', timestamp) AS INTEGER) AS day, COUNT(*)
+		SELECT CAST(substr(timestamp, 9, 2) AS INTEGER) AS day, COUNT(*)
 		FROM log
 		WHERE timestamp >= ? AND timestamp < ?
 		GROUP BY day
